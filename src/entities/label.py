@@ -1,3 +1,5 @@
+from math import e
+import re
 from enum import Enum
 
 
@@ -51,11 +53,71 @@ class Label:
     def __init__(self, raw_label: str):
         self.raw_label = raw_label
 
+    def _get_label_part(self, part: int) -> str:
+        if "|" not in self.raw_label:
+            return self.raw_label.strip()
+
+        parts = self.raw_label.split("|", 1)
+        if part < len(parts):
+            return parts[part].strip()
+        else:
+            return ""
+    
+    def _remove_date(self, label: str) -> str:
+        return re.sub(r"\b\d{2}/\d{2}/\d{2}\b", "", label)
+    
+    def remove_card_number(self, label: str) -> str:
+        return re.sub(r"Cb\*\d+", "", label)
+    
+    def remove_keywords(self, label: str) -> str:
+        keywords = ["CARTE", "AVOIR", "VIR", "SEPA", "INST", "PRLV", "REJ"]
+
+        label_elements = label.split()
+
+        elements_to_keep = []
+
+        for element in label_elements:
+            if element.upper() not in keywords:
+                elements_to_keep.append(element)
+
+        return " ".join(elements_to_keep)
+    
+    def remove_numbers(self, label: str) -> str:
+        label_elements = label.split()
+
+        elements_to_keep = []
+
+        for element in label_elements:
+            if not re.match(r"^\d+$", element):
+                elements_to_keep.append(element)
+        
+        return " ".join(elements_to_keep)
+
+    def get_label(self) -> str:
+        clean_label = self._get_label_part(0)
+        clean_label = self._remove_date(clean_label)
+        clean_label = self.remove_card_number(clean_label)
+        clean_label = self.remove_keywords(clean_label)
+        clean_label = self.remove_numbers(clean_label)
+
+        return clean_label.strip()
+
+    def get_credit_card_number(self) -> str | None:
+        if "|" not in self.raw_label:
+            return None
+
+        raw_part = self._get_label_part(1)
+        match = re.search(r"CB\*(\d+)$", raw_part)
+        if match:
+            return f"*{match.group(1)}"
+
+        return None
+
     def get_type(self) -> TransactionType:
         if "|" not in self.raw_label:
             return TransactionType.UNKNOWN
 
-        raw_part = self.raw_label.split("|", 1)[1].strip().upper()
+        raw_part = self._get_label_part(1).upper()
 
         for prefix, transaction_type in _TYPE_MAP:
             if raw_part.startswith(prefix):
