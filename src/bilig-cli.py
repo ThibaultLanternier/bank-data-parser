@@ -3,6 +3,8 @@ from pathlib import Path
 
 import click
 
+from services.transaction_enhancer import TransactionEnhancer
+
 sys.path.insert(0, str(Path(__file__).parent))
 
 from services.csv_bank_data_reader import CsvBankDataReader
@@ -27,7 +29,9 @@ def extract(input_path: str):
     oldest = min(dates).date()
     most_recent = max(dates).date()
 
-    output_path = FileRecorder().write_csv(transactions)
+    enhanced_transactions = TransactionEnhancer(transactions).get_enhanced_list()
+
+    output_path = FileRecorder().write_csv(enhanced_transactions)
 
     accounts_str = ", ".join(accounts[:-1]) + f" and {accounts[-1]}" if len(accounts) > 1 else accounts[0]
     click.echo(

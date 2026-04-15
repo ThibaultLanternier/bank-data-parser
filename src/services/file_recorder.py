@@ -7,8 +7,12 @@ from entities.transaction import transaction
 OUTPUT_DIR = Path(__file__).parent.parent / "output"
 
 FIELDNAMES = [
-    "dateOperation",
-    "dateValue",
+    "id",
+    "group_id",
+    "date_operation",
+    "date_value",
+    "year",
+    "month",
     "label",
     "raw_label",
     "type",
@@ -19,6 +23,8 @@ FIELDNAMES = [
     "account_number",
     "account_label",
     "is_debit",
+    "is_internal",
+    "is_large",
     "amount",
 ]
 
@@ -34,8 +40,12 @@ class FileRecorder:
             writer.writeheader()
             for t in transactions:
                 writer.writerow({
-                    "dateOperation": t.dateOperation.strftime("%Y-%m-%d"),
-                    "dateValue": t.dateValue.strftime("%Y-%m-%d"),
+                    "id": t.id,
+                    "group_id": t.group_id,
+                    "date_operation": t.dateOperation.strftime("%Y-%m-%d"),
+                    "date_value": t.dateValue.strftime("%Y-%m-%d"),
+                    "year": t.dateOperation.year,
+                    "month": t.dateOperation.month,
                     "label": t.label.get_label(),
                     "raw_label": t.label.raw_label,
                     "type": t.label.get_type().value,
@@ -46,6 +56,8 @@ class FileRecorder:
                     "account_number": t.account.account_number,
                     "account_label": t.account.account_label,
                     "is_debit": t.amount < 0,
+                    "is_internal": "INTERNAL" if t.is_internal else "",
+                    "is_large": "LARGE" if t.is_large else "",
                     "amount": f"{t.amount:.2f}".replace(".", ","),
                 })
 
