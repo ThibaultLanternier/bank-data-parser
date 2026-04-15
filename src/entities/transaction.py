@@ -24,6 +24,7 @@ class Transaction:
         self.amount = amount
         self.is_internal = False
         self.is_large = False
+        self.grouped_label: str = ""
 
     @property
     def id(self) -> str:
