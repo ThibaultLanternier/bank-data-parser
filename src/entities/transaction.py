@@ -6,7 +6,7 @@ from entities.category import Category
 from entities.label import Label
 
 
-class transaction:
+class Transaction:
     def __init__(
             self, 
             dateOperation: datetime,

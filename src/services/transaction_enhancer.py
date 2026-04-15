@@ -1,25 +1,25 @@
 from collections import defaultdict
 
-from entities.transaction import transaction
+from entities.transaction import Transaction
 
 
 class TransactionEnhancer:
-    def __init__(self, transactions: list[transaction]):
+    def __init__(self, transactions: list[Transaction]):
         self._transactions = transactions
-        self._by_id: dict[str, transaction] = {t.id: t for t in transactions}
-        self._by_group: dict[str, list[transaction]] = defaultdict(list)
+        self._by_id: dict[str, Transaction] = {t.id: t for t in transactions}
+        self._by_group: dict[str, list[Transaction]] = defaultdict(list)
         for t in transactions:
             self._by_group[t.group_id].append(t)
 
     @property
-    def by_id(self) -> dict[str, transaction]:
+    def by_id(self) -> dict[str, Transaction]:
         return self._by_id
 
     @property
-    def by_group(self) -> dict[str, list[transaction]]:
+    def by_group(self) -> dict[str, list[Transaction]]:
         return self._by_group
 
-    def get_enhanced_list(self) -> list[transaction]:
+    def get_enhanced_list(self) -> list[Transaction]:
         offsetting_pairs = self._find_offsetting_pairs()
         for t1, t2 in offsetting_pairs:
             self._by_id[t1.id].is_internal = True
@@ -31,7 +31,7 @@ class TransactionEnhancer:
 
         return list(self._by_id.values())
 
-    def _find_offsetting_pairs(self) -> list[tuple[transaction, transaction]]:
+    def _find_offsetting_pairs(self) -> list[tuple[Transaction, Transaction]]:
         pairs = []
         for group_id, group_transactions in self._by_group.items():
             if len(group_transactions) < 2:
@@ -39,10 +39,10 @@ class TransactionEnhancer:
             pairs.extend(self._find_pairs_in_group(group_transactions))
         return pairs
     
-    def _find_large_transactions(self, threshold: float = 10000.0) -> list[transaction]:
+    def _find_large_transactions(self, threshold: float = 10000.0) -> list[Transaction]:
         return [t for t in self._by_id.values() if abs(t.amount) >= threshold]
 
-    def _find_pairs_in_group(self, group: list[transaction]) -> list[tuple[transaction, transaction]]:
+    def _find_pairs_in_group(self, group: list[Transaction]) -> list[tuple[Transaction, Transaction]]:
         pairs = []
         n = len(group)
         for i in range(n):

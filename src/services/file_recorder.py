@@ -2,7 +2,7 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
-from entities.transaction import transaction
+from entities.transaction import Transaction
 
 OUTPUT_DIR = Path(__file__).parent.parent / "output"
 
@@ -30,7 +30,7 @@ FIELDNAMES = [
 
 
 class FileRecorder:
-    def write_csv(self, transactions: list[transaction], filename: str | None = None) -> Path:
+    def write_csv(self, transactions: list[Transaction], filename: str | None = None) -> Path:
         if filename is None:
             filename = f"transactions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 

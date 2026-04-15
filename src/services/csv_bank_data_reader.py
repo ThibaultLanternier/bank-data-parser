@@ -6,17 +6,17 @@ from entities.account import Account
 from services.bank_data_reader import BankDataReader
 from entities.category import Category
 from entities.label import Label
-from entities.transaction import transaction
+from entities.transaction import Transaction
 
 
 class CsvBankDataReader(BankDataReader):
-    def read(self, paths: list[Path]) -> list[transaction]:
+    def read(self, paths: list[Path]) -> list[Transaction]:
         transactions = []
         for path in paths:
             transactions.extend(self._read_file(path))
         return transactions
 
-    def _read_file(self, path: Path) -> list[transaction]:
+    def _read_file(self, path: Path) -> list[Transaction]:
         transactions = []
         with open(path, encoding="utf-8-sig") as f:
             reader = csv.DictReader(f, delimiter=";")
@@ -24,8 +24,8 @@ class CsvBankDataReader(BankDataReader):
                 transactions.append(self._parse_row(row))
         return transactions
 
-    def _parse_row(self, row: dict) -> transaction:
-        return transaction(
+    def _parse_row(self, row: dict) -> Transaction:
+        return Transaction(
             dateOperation=datetime.strptime(row["dateOp"], "%Y-%m-%d"),
             dateValue=datetime.strptime(row["dateVal"], "%Y-%m-%d"),
             label=Label(row["label"]),
