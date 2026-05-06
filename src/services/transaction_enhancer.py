@@ -1,6 +1,17 @@
+import logging
+import re
+import unicodedata
 from collections import defaultdict
 
+import numpy as np
+from rapidfuzz import fuzz
+from sklearn.cluster import DBSCAN
+
+from entities import transaction_cluster
 from entities.transaction import Transaction
+from entities.transaction_cluster import TransactionCluster
+
+logger = logging.getLogger(__name__)
 
 
 class TransactionEnhancer:
@@ -24,10 +35,20 @@ class TransactionEnhancer:
         for t1, t2 in offsetting_pairs:
             self._by_id[t1.id].is_internal = True
             self._by_id[t2.id].is_internal = True
-        
+        logger.info("Found %d internal (offsetting) transaction pairs", len(offsetting_pairs))
+
         large_transactions = self._find_large_transactions()
         for t in large_transactions:
             self._by_id[t.id].is_large = True
+        logger.info("Found %d large transactions", len(large_transactions))
+
+        transaction_clusters = TransactionCluster(self._transactions).group_by_label()
+        logger.info("Grouped transactions into %d clusters", len(transaction_clusters))
+
+        for cluster_id, cluster in transaction_clusters.items():
+            for t in cluster.transactions:
+                self._by_id[t.id].cluster_id = cluster_id
+                self.by_id[t.id].grouped_label = cluster.get_normalized_labels()
 
         return list(self._by_id.values())
 
