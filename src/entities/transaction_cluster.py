@@ -3,7 +3,6 @@ import logging
 import numpy as np
 from rapidfuzz import fuzz
 from sklearn.cluster import DBSCAN
-
 from entities.label import Label
 from entities.transaction import Transaction
 
@@ -28,19 +27,16 @@ class TransactionCluster:
         logger.info("Clustering %d unique labels", n)
         distance_matrix = np.zeros((n, n))
         
-        for i, normalized_label_1 in enumerate(self._index_by_label.keys()):
-            for j, normalized_label_2 in enumerate(self._index_by_label.keys()):
-                similarity = fuzz.token_sort_ratio(normalized_label_1, normalized_label_2) / 100.0
-                
-                logger.info("Comparing labels: '%s' vs '%s' got initial similarity: %.2f", normalized_label_1, normalized_label_2, similarity)
-                label1 = self._get_label(normalized_label_1)
-                label2 = self._get_label(normalized_label_2)
-                similarity = label1.get_similarity(label2)
-                
+        normalized_labels = list(self._index_by_label.keys())
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                similarity = fuzz.token_sort_ratio(normalized_labels[i], normalized_labels[j]) / 100.0
                 distance_matrix[i][j] = 1.0 - similarity
-                distance_matrix[j][i] = 1.0 - similarity        
+                distance_matrix[j][i] = 1.0 - similarity
+                
         logger.info("Computed distance matrix for %d labels", n)
-        db = DBSCAN(eps=0.25, min_samples=1, metric="precomputed")
+        db = DBSCAN(eps=0.2, min_samples=1, metric="precomputed")
         db.fit(distance_matrix)
 
         normalized_labels_clusters: dict[int, list[str]] = {}
