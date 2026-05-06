@@ -1,21 +1,20 @@
-import re
 import sys
 from pathlib import Path
 
 import click
 
-from services.transaction_enhancer import TransactionEnhancer
-
 sys.path.insert(0, str(Path(__file__).parent))
 
+from logging_config import setup_logging
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
 from services.file_recorder import FileRecorder
+from services.transaction_enhancer import TransactionEnhancer
 
 
 @click.group()
 def cli():
-    pass
+    setup_logging()
 
 
 @cli.command()
@@ -25,13 +24,16 @@ def extract(input_path: str, parquet: bool):
     """Extract and summarize transactions from CSV files found in INPUT_PATH."""
     paths = FileReader(input_path).get_csv_files()
     transactions = CsvBankDataReader().read(paths)
+    click.echo(f"Read {len(transactions)} transactions from {len(paths)} files.")
 
     accounts = sorted({t.account.account_label for t in transactions})
     dates = [t.dateOperation for t in transactions]
     oldest = min(dates).date()
     most_recent = max(dates).date()
 
+    click.echo(f"Starting transactions analysis and enhancement...")
     enhanced_transactions = TransactionEnhancer(transactions).get_enhanced_list()
+    click.echo(f"Transactions analysis and enhancement completed.")
 
     recorder = FileRecorder()
     csv_path = recorder.write_csv(enhanced_transactions)

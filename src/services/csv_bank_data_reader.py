@@ -1,4 +1,5 @@
 import csv
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -8,15 +9,19 @@ from entities.category import Category
 from entities.label import Label
 from entities.transaction import Transaction
 
+logger = logging.getLogger(__name__)
+
 
 class CsvBankDataReader(BankDataReader):
     def read(self, paths: list[Path]) -> list[Transaction]:
         transactions = []
         for path in paths:
             transactions.extend(self._read_file(path))
+        logger.info("Read %d transactions from %d files", len(transactions), len(paths))
         return transactions
 
     def _read_file(self, path: Path) -> list[Transaction]:
+        logger.debug("Reading file: %s", path)
         transactions = []
         with open(path, encoding="utf-8-sig") as f:
             reader = csv.DictReader(f, delimiter=";")

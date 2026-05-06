@@ -1,7 +1,9 @@
 from math import e
 import re
 from enum import Enum
+import unicodedata
 
+from rapidfuzz import fuzz
 
 class TransactionType(Enum):
     CARD = "CARD"
@@ -51,7 +53,7 @@ _TYPE_MAP = [
 
 class Label:
     def __init__(self, raw_label: str):
-        self.raw_label = raw_label
+        self.raw_label = raw_label.lower() # But in lowercase from the start
 
     def _get_label_part(self, part: int) -> str:
         if "|" not in self.raw_label:
@@ -67,7 +69,7 @@ class Label:
         return re.sub(r"\b\d{2}/\d{2}/\d{2}\b", "", label)
     
     def remove_card_number(self, label: str) -> str:
-        return re.sub(r"Cb\*\d+", "", label)
+        return re.sub(r"cb\*\d+", "", label)
     
     def remove_keywords(self, label: str) -> str:
         keywords = ["CARTE", "AVOIR", "VIR", "SEPA", "INST", "PRLV", "REJ"]
@@ -101,13 +103,22 @@ class Label:
         clean_label = self.remove_numbers(clean_label)
 
         return clean_label.strip()
+    
+    def get_normalized_label(self) -> str:
+        s = self.get_label()
+        s = unicodedata.normalize('NFD', s)
+        s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
+        s = re.sub(r'[._\-]', ' ', s)
+        s = re.sub(r'\b(com|www|inc|llc|ab)\b', '', s)
+        s = re.sub(r'\s+', ' ', s).strip()
+        return s
 
     def get_credit_card_number(self) -> str | None:
         if "|" not in self.raw_label:
             return None
 
         raw_part = self._get_label_part(1)
-        match = re.search(r"CB\*(\d+)$", raw_part)
+        match = re.search(r"cb\*(\d+)$", raw_part)
         if match:
             return f"*{match.group(1)}"
 
@@ -124,3 +135,7 @@ class Label:
                 return transaction_type
 
         return TransactionType.UNKNOWN
+    
+    def get_similarity(self, other: 'Label') -> float:
+        similarity = fuzz.token_sort_ratio(self.get_normalized_label(), other.get_normalized_label()) / 100.0
+        return similarity

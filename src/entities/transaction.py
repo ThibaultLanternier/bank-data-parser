@@ -25,6 +25,7 @@ class Transaction:
         self.is_internal = False
         self.is_large = False
         self.grouped_label: str = ""
+        self.cluster_id: str = ""
 
     @property
     def id(self) -> str:
