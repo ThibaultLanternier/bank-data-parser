@@ -46,9 +46,13 @@ class TransactionEnhancer:
         logger.info("Grouped transactions into %d clusters", len(transaction_clusters))
 
         for cluster_id, cluster in transaction_clusters.items():
+            periodicity, periodicity_confidence = cluster.get_autocorrelation_peak() or (None, None)
+
             for t in cluster.transactions:
                 self._by_id[t.id].cluster_id = cluster_id
                 self.by_id[t.id].grouped_label = cluster.get_normalized_labels()
+                self.by_id[t.id].periodicity = periodicity
+                self.by_id[t.id].periodicity_confidence = periodicity_confidence
 
         return list(self._by_id.values())
 

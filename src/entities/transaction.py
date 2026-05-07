@@ -26,6 +26,8 @@ class Transaction:
         self.is_large = False
         self.grouped_label: str = ""
         self.cluster_id: str = ""
+        self.periodicity: int | None = None
+        self.periodicity_confidence: float | None = None
 
     @property
     def id(self) -> str:
