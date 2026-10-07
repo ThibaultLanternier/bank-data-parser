@@ -18,7 +18,7 @@ class TransactionGrouper:
         self.transactions = transactions
 
     def group_by_month(self) -> dict[int, list[MonthlySummary]]:
-        """Summaries of the transactions per month (operation date), grouped by year, both in chronological order."""
+        """Summaries of the transactions per month (operation date), grouped by year, in chronological order."""
         months: dict[tuple[int, int], list[Transaction]] = {}
         for t in self.transactions:
             months.setdefault((t.dateOperation.year, t.dateOperation.month), []).append(t)

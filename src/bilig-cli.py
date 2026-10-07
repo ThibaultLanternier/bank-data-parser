@@ -90,7 +90,7 @@ def _format_amount(amount: float) -> str:
 @cli.command()
 @input_options
 def report(input_path: str, file_type: str):
-    """Report income, expenses, transactions and accounts per month of the CSV, OFX or QIF files found in INPUT_PATH."""
+    """Report per month income, expenses, transactions and accounts of the CSV, OFX or QIF files in INPUT_PATH."""
     transactions = read_transactions(input_path, file_type)
 
     for year, summaries in TransactionGrouper(transactions).group_by_month().items():
