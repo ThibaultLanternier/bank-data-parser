@@ -14,6 +14,13 @@ from services.qif_bank_data_reader import QifBankDataReader
 from services.transaction_enhancer import TransactionEnhancer
 
 
+_READERS = {
+    "csv": (FileReader.get_csv_files, CsvBankDataReader),
+    "ofx": (FileReader.get_ofx_files, OfxBankDataReader),
+    "qif": (FileReader.get_qif_files, QifBankDataReader),
+}
+
+
 @click.group()
 def cli():
     setup_logging()
@@ -21,24 +28,22 @@ def cli():
 
 @cli.command()
 @click.argument("input_path", default="data/boursobank", type=click.Path(exists=True))
+@click.option(
+    "--file-type",
+    type=click.Choice(list(_READERS), case_sensitive=False),
+    default="ofx",
+    show_default=True,
+    help="Type of files to read from INPUT_PATH",
+)
 @click.option("--parquet", is_flag=True, help="Also output a parquet file for pandas")
-def extract(input_path: str, parquet: bool):
-    """Extract and summarize transactions from CSV, OFX and QIF files found in INPUT_PATH."""
-    file_reader = FileReader(input_path)
-    csv_paths = file_reader.get_csv_files()
-    ofx_paths = file_reader.get_ofx_files()
-    qif_paths = file_reader.get_qif_files()
-    transactions = (
-        CsvBankDataReader().read(csv_paths)
-        + OfxBankDataReader().read(ofx_paths)
-        + QifBankDataReader().read(qif_paths)
-    )
-    click.echo(
-        f"Read {len(transactions)} transactions from {len(csv_paths)} CSV files, "
-        f"{len(ofx_paths)} OFX files and {len(qif_paths)} QIF files."
-    )
+def extract(input_path: str, file_type: str, parquet: bool):
+    """Extract and summarize transactions from the CSV, OFX or QIF files found in INPUT_PATH."""
+    get_files, reader_class = _READERS[file_type]
+    paths = get_files(FileReader(input_path))
+    transactions = reader_class().read(paths)
+    click.echo(f"Read {len(transactions)} transactions from {len(paths)} {file_type.upper()} files.")
     if not transactions:
-        raise click.ClickException(f"No transactions found in {input_path}.")
+        raise click.ClickException(f"No transactions found in {file_type.upper()} files in {input_path}.")
 
     accounts = sorted({t.account.account_label for t in transactions})
     dates = [t.dateOperation for t in transactions]
