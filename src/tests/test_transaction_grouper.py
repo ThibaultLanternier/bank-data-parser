@@ -32,7 +32,9 @@ class TestTransactionGrouper:
 
         assert TransactionGrouper(transactions).group_by_month() == {
             2024: [
-                MonthlySummary(2024, 1, date(2024, 1, 5), date(2024, 1, 26), 3000.3, 100.0, 0, 5, ["00001", "00002"]),
+                MonthlySummary(
+                    2024, 1, date(2024, 1, 5), date(2024, 1, 26), 3000.3, 100.0, 0, 5, ["00001", "00002"]
+                ),
             ],
         }
 
@@ -64,6 +66,8 @@ class TestTransactionGrouper:
 
         assert TransactionGrouper(transactions).group_by_month() == {
             2024: [
-                MonthlySummary(2024, 3, date(2024, 3, 1), date(2024, 3, 20), 2000.0, 50.0, 700.0, 6, ["00001", "00002"]),
+                MonthlySummary(
+                    2024, 3, date(2024, 3, 1), date(2024, 3, 20), 2000.0, 50.0, 700.0, 6, ["00001", "00002"]
+                ),
             ],
         }
