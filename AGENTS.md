@@ -1,6 +1,6 @@
 # bilig
 
-CLI tool for extracting and processing bank transaction data from Boursobank CSV and OFX files.
+CLI tool for extracting and processing bank transaction data from Boursobank CSV, OFX and QIF files.
 
 ## Run commands
 
@@ -12,7 +12,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 
 - `src/bilig-cli.py` — CLI entry point (uses click)
 - `src/entities/` — data classes: `transaction`, `Account`, `Category`, `Label`, `SourceType`
-- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `FileReader`, `FileRecorder`
+- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`
 - `src/output/` — generated CSV files (gitignored)
 
 ## CSV format
@@ -30,6 +30,18 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - `FITID` / `TRNTYPE` are stored in `bank_transaction_id` / `bank_transaction_type`
 - No category nor account label in OFX: category is empty, account label is the `ACCTID`
 - Boursobank fills `DTUSER` with invalid values: falls back to `DTPOSTED`
+
+## QIF format
+
+- Only non-investment sections are read (`!Type:Bank`, `Cash`, `CCard`, `Oth A`, `Oth L`)
+- Dates are read as `DD/MM/YYYY` (Boursobank), `DD/MM/YY` and `DD/MM'YY` are also accepted
+- UTF-8 encoding, falls back to windows-1252
+- `P` (+ `M`) is turned into a `Label` as `"<payee> | <payee>"`, same as OFX
+- `L` is the category, `Parent:Sub` is split into parent and category
+- `N` (check / reference number) is stored in `bank_transaction_id`
+- Only the first value of a field is kept, split lines (`S`, `E`, `$`) are ignored
+- No value date in QIF: value date is the transaction date
+- Account comes from the `!Account` header `N` field, otherwise the file name (without extension)
 
 ## Conventions
 
