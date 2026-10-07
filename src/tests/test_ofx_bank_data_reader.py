@@ -80,3 +80,45 @@ class TestOfxBankDataReader:
         )
         with pytest.raises(ValueError):
             OfxBankDataReader().read([path])
+
+
+def _write_ofx(path, account_id, stmttrns):
+    path.write_text(
+        f"<OFX><STMTRS><BANKACCTFROM><ACCTID>{account_id}</ACCTID></BANKACCTFROM>"
+        f"<BANKTRANLIST>{stmttrns}</BANKTRANLIST></STMTRS></OFX>",
+        encoding="utf-8",
+    )
+    return path
+
+
+def _stmttrn(amount, fitid=None, name="LIDL"):
+    fitid_tag = f"<FITID>{fitid}</FITID>" if fitid is not None else ""
+    return f"<STMTTRN><DTPOSTED>20261002</DTPOSTED><TRNAMT>{amount}</TRNAMT>{fitid_tag}<NAME>{name}</NAME></STMTTRN>"
+
+
+class TestOfxDeduplication:
+    def test_removes_duplicates_across_files(self, tmp_path):
+        first = _write_ofx(tmp_path / "september.ofx", "1", _stmttrn("-1.00", "a") + _stmttrn("-2.00", "b"))
+        second = _write_ofx(tmp_path / "october.ofx", "1", _stmttrn("-2.00", "b") + _stmttrn("-3.00", "c"))
+        transactions = OfxBankDataReader().read([first, second])
+        assert [t.bank_transaction_id for t in transactions] == ["a", "b", "c"]
+
+    def test_keeps_first_occurrence(self, tmp_path):
+        first = _write_ofx(tmp_path / "first.ofx", "1", _stmttrn("-1.00", "a"))
+        second = _write_ofx(tmp_path / "second.ofx", "1", _stmttrn("-1.00", "a"))
+        transactions = OfxBankDataReader().read([first, second])
+        assert len(transactions) == 1
+        assert transactions[0].source_file == "first.ofx"
+
+    def test_removes_duplicates_within_file(self, tmp_path):
+        path = _write_ofx(tmp_path / "export.ofx", "1", _stmttrn("-1.00", "a") + _stmttrn("-1.00", "a"))
+        assert len(OfxBankDataReader().read([path])) == 1
+
+    def test_same_fitid_on_different_accounts_is_kept(self, tmp_path):
+        first = _write_ofx(tmp_path / "checking.ofx", "1", _stmttrn("-1.00", "a"))
+        second = _write_ofx(tmp_path / "savings.ofx", "2", _stmttrn("-1.00", "a"))
+        assert len(OfxBankDataReader().read([first, second])) == 2
+
+    def test_transactions_without_fitid_are_kept(self, tmp_path):
+        path = _write_ofx(tmp_path / "export.ofx", "1", _stmttrn("-1.00") + _stmttrn("-1.00"))
+        assert len(OfxBankDataReader().read([path])) == 2

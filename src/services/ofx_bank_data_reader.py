@@ -24,8 +24,25 @@ class OfxBankDataReader(BankDataReader):
         transactions = []
         for path in paths:
             transactions.extend(self._read_file(path))
+        transactions = self._remove_duplicates(transactions)
         logger.info("Read %d transactions from %d files", len(transactions), len(paths))
         return transactions
+
+    def _remove_duplicates(self, transactions: list[Transaction]) -> list[Transaction]:
+        # Exports covering overlapping periods contain the same transactions, FITID
+        # is unique per account so (account, FITID) identifies a transaction
+        seen = set()
+        unique = []
+        for t in transactions:
+            if t.bank_transaction_id is not None:
+                key = (t.account.account_number, t.bank_transaction_id)
+                if key in seen:
+                    continue
+                seen.add(key)
+            unique.append(t)
+        if len(unique) < len(transactions):
+            logger.info("Removed %d duplicate transactions", len(transactions) - len(unique))
+        return unique
 
     def _read_file(self, path: Path) -> list[Transaction]:
         logger.debug("Reading file: %s", path)
