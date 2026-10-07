@@ -50,7 +50,7 @@ class CsvBankDataReader(BankDataReader):
             for values in reader:
                 if not values:
                     continue
-                transactions.append(self._parse_row(dict(zip(fieldnames, values))))
+                transactions.append(self._parse_row(dict(zip(fieldnames, values)), path))
         return transactions
 
     def _normalize_header(self, header: list[str]) -> list[str]:
@@ -67,7 +67,7 @@ class CsvBankDataReader(BankDataReader):
                 fieldnames.append(_NEW_FORMAT_HEADERS.get(column, column))
         return fieldnames
 
-    def _parse_row(self, row: dict) -> Transaction:
+    def _parse_row(self, row: dict, path: Path) -> Transaction:
         return Transaction(
             dateOperation=datetime.strptime(row["dateOp"], "%Y-%m-%d"),
             dateValue=datetime.strptime(row["dateVal"], "%Y-%m-%d"),
