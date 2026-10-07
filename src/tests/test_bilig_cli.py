@@ -72,6 +72,7 @@ class TestReportCommand:
         assert result.output.endswith(
             "\n2026\n"
             "  October\n"
+            "    From 01-10-2026 until 02-10-2026\n"
             "    Total Income : 3 000,00 €\n"
             "    Total Expenses : 92,72 €\n"
             "    Total Transfers : 0,00 €\n"

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 
 from entities.transaction import Transaction
 
@@ -7,6 +8,8 @@ from entities.transaction import Transaction
 class MonthlySummary:
     year: int
     month: int
+    first_date: date  # operation date of the first transaction of the month
+    last_date: date  # operation date of the last transaction of the month
     total_income: float  # transfers between accounts excluded
     total_expenses: float  # transfers between accounts excluded, positive sum of the debits
     total_transfers: float  # credit side of the transfers between accounts
@@ -32,9 +35,12 @@ class TransactionGrouper:
     @staticmethod
     def _summarize(year: int, month: int, transactions: list[Transaction]) -> MonthlySummary:
         external = [t for t in transactions if not t.is_internal]
+        dates = [t.dateOperation.date() for t in transactions]
         return MonthlySummary(
             year=year,
             month=month,
+            first_date=min(dates),
+            last_date=max(dates),
             total_income=round(sum(t.amount for t in external if t.amount > 0), 2),
             total_expenses=round(-sum(t.amount for t in external if t.amount < 0), 2),
             total_transfers=round(sum(t.amount for t in transactions if t.is_internal and t.amount > 0), 2),

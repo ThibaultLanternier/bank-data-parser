@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from entities.account import Account
 from entities.category import Category
@@ -31,7 +31,9 @@ class TestTransactionGrouper:
         ]
 
         assert TransactionGrouper(transactions).group_by_month() == {
-            2024: [MonthlySummary(2024, 1, 3000.3, 100.0, 0, 5, ["00001", "00002"])],
+            2024: [
+                MonthlySummary(2024, 1, date(2024, 1, 5), date(2024, 1, 26), 3000.3, 100.0, 0, 5, ["00001", "00002"]),
+            ],
         }
 
     def test_groups_months_by_year_in_chronological_order(self):
@@ -44,10 +46,10 @@ class TestTransactionGrouper:
 
         assert TransactionGrouper(transactions).group_by_month() == {
             2024: [
-                MonthlySummary(2024, 2, 30.0, 0, 0, 1, ["00001"]),
-                MonthlySummary(2024, 12, 0, 60.0, 0, 2, ["00001", "00002"]),
+                MonthlySummary(2024, 2, date(2024, 2, 1), date(2024, 2, 1), 30.0, 0, 0, 1, ["00001"]),
+                MonthlySummary(2024, 12, date(2024, 12, 1), date(2024, 12, 31), 0, 60.0, 0, 2, ["00001", "00002"]),
             ],
-            2025: [MonthlySummary(2025, 1, 0, 10.0, 0, 1, ["00001"])],
+            2025: [MonthlySummary(2025, 1, date(2025, 1, 3), date(2025, 1, 3), 0, 10.0, 0, 1, ["00001"])],
         }
 
     def test_excludes_transfers_from_income_and_expenses(self):
@@ -61,5 +63,7 @@ class TestTransactionGrouper:
         ]
 
         assert TransactionGrouper(transactions).group_by_month() == {
-            2024: [MonthlySummary(2024, 3, 2000.0, 50.0, 700.0, 6, ["00001", "00002"])],
+            2024: [
+                MonthlySummary(2024, 3, date(2024, 3, 1), date(2024, 3, 20), 2000.0, 50.0, 700.0, 6, ["00001", "00002"]),
+            ],
         }

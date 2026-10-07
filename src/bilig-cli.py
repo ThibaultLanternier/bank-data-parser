@@ -97,6 +97,7 @@ def report(input_path: str, file_type: str):
         click.echo(f"\n{year}")
         for summary in summaries:
             click.echo(f"  {calendar.month_name[summary.month]}")
+            click.echo(f"    From {summary.first_date:%d-%m-%Y} until {summary.last_date:%d-%m-%Y}")
             click.echo(f"    Total Income : {_format_amount(summary.total_income)}")
             click.echo(f"    Total Expenses : {_format_amount(summary.total_expenses)}")
             click.echo(f"    Total Transfers : {_format_amount(summary.total_transfers)}")

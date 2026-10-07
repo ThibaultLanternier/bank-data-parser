@@ -5,7 +5,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 ## Run commands
 
 - Extract transactions: `python src/bilig-cli.py extract [data/boursobank] [--file-type ofx|qif|csv]` (default `ofx`)
-- Monthly report (income, expenses, transfers between accounts, transactions count, accounts): `python src/bilig-cli.py report [data/boursobank] [--file-type ofx|qif|csv]` (default `ofx`)
+- Monthly report (first and last date, income, expenses, transfers between accounts, transactions count, accounts): `python src/bilig-cli.py report [data/boursobank] [--file-type ofx|qif|csv]` (default `ofx`)
 - Run tests: `pytest`
 - Install dependencies: `poetry install`
 
