@@ -13,7 +13,6 @@ from services.ofx_bank_data_reader import OfxBankDataReader
 from services.qif_bank_data_reader import QifBankDataReader
 from services.transaction_enhancer import TransactionEnhancer
 
-
 _READERS = {
     "csv": (FileReader.get_csv_files, CsvBankDataReader),
     "ofx": (FileReader.get_ofx_files, OfxBankDataReader),
@@ -56,7 +55,7 @@ def extract(input_path: str, file_type: str, parquet: bool):
 
     recorder = FileRecorder()
     csv_path = recorder.write_csv(enhanced_transactions)
-    
+
     accounts_str = ", ".join(accounts[:-1]) + f" and {accounts[-1]}" if len(accounts) > 1 else accounts[0]
     click.echo(
         f"Found {len(transactions)} transactions, coming from {accounts_str} "
