@@ -32,6 +32,10 @@ FIELDNAMES = [
     "is_internal",
     "is_large",
     "amount",
+    "source_type",
+    "source_file",
+    "bank_transaction_id",
+    "bank_transaction_type",
 ]
 
 
@@ -69,6 +73,10 @@ class FileRecorder:
                     "is_internal": "INTERNAL" if t.is_internal else "",
                     "is_large": "LARGE" if t.is_large else "",
                     "amount": f"{t.amount:.2f}".replace(".", ","),
+                    "source_type": t.source_type.value if t.source_type else "",
+                    "source_file": t.source_file,
+                    "bank_transaction_id": t.bank_transaction_id or "",
+                    "bank_transaction_type": t.bank_transaction_type or "",
                 })
 
         return output_path
@@ -103,6 +111,10 @@ class FileRecorder:
                 "is_internal": t.is_internal,
                 "is_large": t.is_large,
                 "amount": t.amount,
+                "source_type": t.source_type.value if t.source_type else None,
+                "source_file": t.source_file,
+                "bank_transaction_id": t.bank_transaction_id,
+                "bank_transaction_type": t.bank_transaction_type,
             })
 
         df = pd.DataFrame(rows)
