@@ -29,7 +29,7 @@ class Transaction:
         self.amount = amount
         self.source_type = source_type
         self.source_file = source_file
-        self.bank_transaction_id = bank_transaction_id  # OFX FITID
+        self.bank_transaction_id = bank_transaction_id  # OFX FITID, QIF check/reference number
         self.bank_transaction_type = bank_transaction_type  # OFX TRNTYPE
         self.is_internal = False
         self.is_large = False

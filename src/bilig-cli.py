@@ -9,6 +9,7 @@ from logging_config import setup_logging
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
 from services.ofx_bank_data_reader import OfxBankDataReader
+from services.qif_bank_data_reader import QifBankDataReader
 from services.file_recorder import FileRecorder
 from services.transaction_enhancer import TransactionEnhancer
 
@@ -22,14 +23,19 @@ def cli():
 @click.argument("input_path", default="data/boursobank", type=click.Path(exists=True))
 @click.option("--parquet", is_flag=True, help="Also output a parquet file for pandas")
 def extract(input_path: str, parquet: bool):
-    """Extract and summarize transactions from CSV and OFX files found in INPUT_PATH."""
+    """Extract and summarize transactions from CSV, OFX and QIF files found in INPUT_PATH."""
     file_reader = FileReader(input_path)
     csv_paths = file_reader.get_csv_files()
     ofx_paths = file_reader.get_ofx_files()
-    transactions = CsvBankDataReader().read(csv_paths) + OfxBankDataReader().read(ofx_paths)
+    qif_paths = file_reader.get_qif_files()
+    transactions = (
+        CsvBankDataReader().read(csv_paths)
+        + OfxBankDataReader().read(ofx_paths)
+        + QifBankDataReader().read(qif_paths)
+    )
     click.echo(
-        f"Read {len(transactions)} transactions from {len(csv_paths)} CSV files "
-        f"and {len(ofx_paths)} OFX files."
+        f"Read {len(transactions)} transactions from {len(csv_paths)} CSV files, "
+        f"{len(ofx_paths)} OFX files and {len(qif_paths)} QIF files."
     )
     if not transactions:
         raise click.ClickException(f"No transactions found in {input_path}.")
