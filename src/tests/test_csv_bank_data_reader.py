@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 
 from entities.label import TransactionType
+from entities.source_type import SourceType
 from services.csv_bank_data_reader import CsvBankDataReader
 
 OLD_FORMAT = (
@@ -46,6 +47,14 @@ class TestOldFormat:
         t = CsvBankDataReader().read([_write(tmp_path, OLD_FORMAT)])[1]
         assert t.amount == pytest.approx(-1104.95)
 
+    def test_sets_source_metadata(self, tmp_path):
+        t = CsvBankDataReader().read([_write(tmp_path, OLD_FORMAT)])[0]
+
+        assert t.source_type == SourceType.CSV
+        assert t.source_file == "export.csv"
+        assert t.bank_transaction_id is None
+        assert t.bank_transaction_type is None
+
 
 class TestNewFormat:
     def test_reads_all_rows(self, tmp_path):
@@ -73,6 +82,14 @@ class TestNewFormat:
         t = CsvBankDataReader().read([_write(tmp_path, NEW_FORMAT)])[2]
         assert t.label.get_label() == "someone"
         assert t.label.get_type() == TransactionType.VIR_SEPA
+
+    def test_sets_source_metadata(self, tmp_path):
+        t = CsvBankDataReader().read([_write(tmp_path, NEW_FORMAT)])[0]
+
+        assert t.source_type == SourceType.CSV
+        assert t.source_file == "export.csv"
+        assert t.bank_transaction_id is None
+        assert t.bank_transaction_type is None
 
 
 def test_reads_mixed_formats(tmp_path):
