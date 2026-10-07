@@ -30,12 +30,18 @@ class TransactionEnhancer:
     def by_group(self) -> dict[str, list[Transaction]]:
         return self._by_group
 
-    def get_enhanced_list(self) -> list[Transaction]:
+    def mark_internal_transactions(self) -> list[Transaction]:
+        """Flag as internal the transfers between accounts (same day, opposite amounts, different accounts)."""
         offsetting_pairs = self._find_offsetting_pairs()
-        for t1, t2 in offsetting_pairs:
-            self._by_id[t1.id].is_internal = True
-            self._by_id[t2.id].is_internal = True
+        for pair in offsetting_pairs:
+            for t in pair:
+                t.is_internal = True
+                self._by_id[t.id].is_internal = True  # transactions sharing the same id are deduplicated by id
         logger.info("Found %d internal (offsetting) transaction pairs", len(offsetting_pairs))
+        return self._transactions
+
+    def get_enhanced_list(self) -> list[Transaction]:
+        self.mark_internal_transactions()
 
         large_transactions = self._find_large_transactions()
         for t in large_transactions:
