@@ -28,6 +28,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - Bank (`STMTRS`) and credit card (`CCSTMTRS`) statements are read
 - `NAME` (+ `MEMO`) is turned into a `Label` as `"<name> | <name>"` to reuse CSV label parsing
 - `FITID` / `TRNTYPE` are stored in `bank_transaction_id` / `bank_transaction_type`
+- Duplicates (same `ACCTID` + `FITID`, e.g. overlapping exports) are removed, first occurrence is kept; transactions without `FITID` are never deduplicated
 - No category nor account label in OFX: category is empty, account label is the `ACCTID`
 - Boursobank fills `DTUSER` with invalid values: falls back to `DTPOSTED`
 
