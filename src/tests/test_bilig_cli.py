@@ -68,13 +68,13 @@ class TestReportCommand:
     def test_reports_each_month_of_each_year(self, input_dir):
         result = CliRunner().invoke(bilig_cli.cli, ["report", str(input_dir), "--file-type", "qif"])
         assert result.exit_code == 0, result.output
+        assert "Read 2 transactions from 1 QIF files." in result.output
         assert result.output.endswith(
-            "Read 2 transactions from 1 QIF files.\n"
-            "\n"
-            "2026\n"
+            "\n2026\n"
             "  October\n"
             "    Total Income : 3 000,00 €\n"
             "    Total Expenses : 92,72 €\n"
+            "    Total Transfers : 0,00 €\n"
             "    Number of transactions : 2\n"
             "    Bank accounts : export\n"
         )
@@ -89,3 +89,17 @@ class TestReportCommand:
         result = CliRunner().invoke(bilig_cli.cli, ["report", str(input_dir), "--file-type", "csv"])
         assert result.exit_code != 0
         assert "No transactions found in CSV files" in result.output
+
+    def test_excludes_transfers_between_accounts(self, input_dir):
+        (input_dir / "savings.qif").write_text(
+            "!Type:Bank\nD02/10/2026\nT92.72\nPVIR INTERNE\n^\n", encoding="utf-8"
+        )
+        result = CliRunner().invoke(bilig_cli.cli, ["report", str(input_dir), "--file-type", "qif"])
+        assert result.exit_code == 0, result.output
+        assert result.output.endswith(
+            "    Total Income : 3 000,00 €\n"
+            "    Total Expenses : 0,00 €\n"
+            "    Total Transfers : 92,72 €\n"
+            "    Number of transactions : 3\n"
+            "    Bank accounts : export, savings\n"
+        )

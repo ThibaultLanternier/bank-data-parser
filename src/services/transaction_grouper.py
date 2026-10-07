@@ -7,8 +7,9 @@ from entities.transaction import Transaction
 class MonthlySummary:
     year: int
     month: int
-    total_income: float
-    total_expenses: float  # positive value: sum of the absolute amounts of the debits
+    total_income: float  # transfers between accounts excluded
+    total_expenses: float  # transfers between accounts excluded, positive value: sum of the absolute debits
+    total_transfers: float  # credit side of the transfers between accounts
     transaction_count: int
     account_numbers: list[str]
 
@@ -30,11 +31,13 @@ class TransactionGrouper:
 
     @staticmethod
     def _summarize(year: int, month: int, transactions: list[Transaction]) -> MonthlySummary:
+        external = [t for t in transactions if not t.is_internal]
         return MonthlySummary(
             year=year,
             month=month,
-            total_income=round(sum(t.amount for t in transactions if t.amount > 0), 2),
-            total_expenses=round(-sum(t.amount for t in transactions if t.amount < 0), 2),
+            total_income=round(sum(t.amount for t in external if t.amount > 0), 2),
+            total_expenses=round(-sum(t.amount for t in external if t.amount < 0), 2),
+            total_transfers=round(sum(t.amount for t in transactions if t.is_internal and t.amount > 0), 2),
             transaction_count=len(transactions),
             account_numbers=sorted({t.account.account_number for t in transactions}),
         )

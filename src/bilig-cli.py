@@ -90,8 +90,8 @@ def _format_amount(amount: float) -> str:
 @cli.command()
 @input_options
 def report(input_path: str, file_type: str):
-    """Report per month income, expenses, transactions and accounts of the CSV, OFX or QIF files in INPUT_PATH."""
-    transactions = read_transactions(input_path, file_type)
+    """Report per month income, expenses, transfers, transactions and accounts of the files in INPUT_PATH."""
+    transactions = TransactionEnhancer(read_transactions(input_path, file_type)).mark_internal_transactions()
 
     for year, summaries in TransactionGrouper(transactions).group_by_month().items():
         click.echo(f"\n{year}")
@@ -99,6 +99,7 @@ def report(input_path: str, file_type: str):
             click.echo(f"  {calendar.month_name[summary.month]}")
             click.echo(f"    Total Income : {_format_amount(summary.total_income)}")
             click.echo(f"    Total Expenses : {_format_amount(summary.total_expenses)}")
+            click.echo(f"    Total Transfers : {_format_amount(summary.total_transfers)}")
             click.echo(f"    Number of transactions : {summary.transaction_count}")
             click.echo(f"    Bank accounts : {', '.join(summary.account_numbers)}")
 

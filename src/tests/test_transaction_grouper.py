@@ -10,9 +10,11 @@ MAIN = Account("00001", "Main Account")
 SAVINGS = Account("00002", "Savings Account")
 
 
-def _transaction(date: str, amount: float, account: Account = MAIN) -> Transaction:
+def _transaction(date: str, amount: float, account: Account = MAIN, is_internal: bool = False) -> Transaction:
     day = datetime.strptime(date, "%Y-%m-%d")
-    return Transaction(day, day, Label("Label | LABEL"), Category("misc"), account, amount)
+    t = Transaction(day, day, Label("Label | LABEL"), Category("misc"), account, amount)
+    t.is_internal = is_internal
+    return t
 
 
 class TestTransactionGrouper:
@@ -29,7 +31,7 @@ class TestTransactionGrouper:
         ]
 
         assert TransactionGrouper(transactions).group_by_month() == {
-            2024: [MonthlySummary(2024, 1, 3000.3, 100.0, 5, ["00001", "00002"])],
+            2024: [MonthlySummary(2024, 1, 3000.3, 100.0, 0, 5, ["00001", "00002"])],
         }
 
     def test_groups_months_by_year_in_chronological_order(self):
@@ -42,8 +44,22 @@ class TestTransactionGrouper:
 
         assert TransactionGrouper(transactions).group_by_month() == {
             2024: [
-                MonthlySummary(2024, 2, 30.0, 0, 1, ["00001"]),
-                MonthlySummary(2024, 12, 0, 60.0, 2, ["00001", "00002"]),
+                MonthlySummary(2024, 2, 30.0, 0, 0, 1, ["00001"]),
+                MonthlySummary(2024, 12, 0, 60.0, 0, 2, ["00001", "00002"]),
             ],
-            2025: [MonthlySummary(2025, 1, 0, 10.0, 1, ["00001"])],
+            2025: [MonthlySummary(2025, 1, 0, 10.0, 0, 1, ["00001"])],
+        }
+
+    def test_excludes_transfers_from_income_and_expenses(self):
+        transactions = [
+            _transaction("2024-03-01", 2000.0),
+            _transaction("2024-03-02", -50.0),
+            _transaction("2024-03-05", -500.0, is_internal=True),
+            _transaction("2024-03-05", 500.0, SAVINGS, is_internal=True),
+            _transaction("2024-03-20", -200.0, SAVINGS, is_internal=True),
+            _transaction("2024-03-20", 200.0, is_internal=True),
+        ]
+
+        assert TransactionGrouper(transactions).group_by_month() == {
+            2024: [MonthlySummary(2024, 3, 2000.0, 50.0, 700.0, 6, ["00001", "00002"])],
         }
