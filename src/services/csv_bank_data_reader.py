@@ -7,6 +7,7 @@ from entities.account import Account
 from services.bank_data_reader import BankDataReader
 from entities.category import Category
 from entities.label import Label
+from entities.source_type import SourceType
 from entities.transaction import Transaction
 
 logger = logging.getLogger(__name__)
@@ -26,10 +27,10 @@ class CsvBankDataReader(BankDataReader):
         with open(path, encoding="utf-8-sig") as f:
             reader = csv.DictReader(f, delimiter=";")
             for row in reader:
-                transactions.append(self._parse_row(row))
+                transactions.append(self._parse_row(row, path))
         return transactions
 
-    def _parse_row(self, row: dict) -> Transaction:
+    def _parse_row(self, row: dict, path: Path) -> Transaction:
         return Transaction(
             dateOperation=datetime.strptime(row["dateOp"], "%Y-%m-%d"),
             dateValue=datetime.strptime(row["dateVal"], "%Y-%m-%d"),
@@ -37,6 +38,8 @@ class CsvBankDataReader(BankDataReader):
             category=Category(row["category"], row["categoryParent"]),
             account=Account(row["accountNum"], row["accountLabel"]),
             amount=self._parse_amount(row["amount"]),
+            source_type=SourceType.CSV,
+            source_file=path,
         )
 
     def _parse_amount(self, value: str) -> float:
