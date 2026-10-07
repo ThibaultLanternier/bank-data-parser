@@ -18,7 +18,10 @@ class Transaction:
             account: Account,
             amount: float,
             source_type: SourceType | None = None,
-            source_file: Path | None = None
+            source_file: Path | None = None,
+            memo: str = "",
+            check_number: str = "",
+            cleared_status: str = ""
         ):
         self.dateOperation = dateOperation
         self.dateValue = dateValue
@@ -28,6 +31,9 @@ class Transaction:
         self.amount = amount
         self.source_type = source_type
         self.source_file = source_file
+        self.memo = memo
+        self.check_number = check_number
+        self.cleared_status = cleared_status
         self.is_internal = False
         self.is_large = False
         self.grouped_label: str = ""
