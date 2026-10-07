@@ -32,6 +32,11 @@ FIELDNAMES = [
     "is_internal",
     "is_large",
     "amount",
+    "memo",
+    "check_number",
+    "cleared_status",
+    "source_type",
+    "source_file",
 ]
 
 
@@ -69,6 +74,11 @@ class FileRecorder:
                     "is_internal": "INTERNAL" if t.is_internal else "",
                     "is_large": "LARGE" if t.is_large else "",
                     "amount": f"{t.amount:.2f}".replace(".", ","),
+                    "memo": t.memo,
+                    "check_number": t.check_number,
+                    "cleared_status": t.cleared_status,
+                    "source_type": t.source_type.value if t.source_type else "",
+                    "source_file": str(t.source_file) if t.source_file else "",
                 })
 
         return output_path
@@ -103,6 +113,11 @@ class FileRecorder:
                 "is_internal": t.is_internal,
                 "is_large": t.is_large,
                 "amount": t.amount,
+                "memo": t.memo,
+                "check_number": t.check_number,
+                "cleared_status": t.cleared_status,
+                "source_type": t.source_type.value if t.source_type else "",
+                "source_file": str(t.source_file) if t.source_file else "",
             })
 
         df = pd.DataFrame(rows)

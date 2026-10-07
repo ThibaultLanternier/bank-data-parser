@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from logging_config import setup_logging
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
+from services.qif_bank_data_reader import QIFBankDataReader
 from services.file_recorder import FileRecorder
 from services.transaction_enhancer import TransactionEnhancer
 
@@ -21,9 +22,15 @@ def cli():
 @click.argument("input_path", default="data/boursobank", type=click.Path(exists=True))
 @click.option("--parquet", is_flag=True, help="Also output a parquet file for pandas")
 def extract(input_path: str, parquet: bool):
-    """Extract and summarize transactions from CSV files found in INPUT_PATH."""
-    paths = FileReader(input_path).get_csv_files()
-    transactions = CsvBankDataReader().read(paths)
+    """Extract and summarize transactions from CSV and QIF files found in INPUT_PATH."""
+    file_reader = FileReader(input_path)
+    csv_paths = file_reader.get_csv_files()
+    qif_paths = file_reader.get_qif_files()
+    paths = csv_paths + qif_paths
+    if not paths:
+        raise click.ClickException(f"No CSV or QIF file found in {input_path}.")
+
+    transactions = CsvBankDataReader().read(csv_paths) + QIFBankDataReader().read(qif_paths)
     click.echo(f"Read {len(transactions)} transactions from {len(paths)} files.")
 
     accounts = sorted({t.account.account_label for t in transactions})
