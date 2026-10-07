@@ -8,7 +8,7 @@ class MonthlySummary:
     year: int
     month: int
     total_income: float  # transfers between accounts excluded
-    total_expenses: float  # transfers between accounts excluded, positive value: sum of the absolute debits
+    total_expenses: float  # transfers between accounts excluded, positive sum of the debits
     total_transfers: float  # credit side of the transfers between accounts
     transaction_count: int
     account_numbers: list[str]
