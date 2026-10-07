@@ -5,6 +5,7 @@ import click
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+from entities.transaction import Transaction
 from logging_config import setup_logging
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
@@ -20,29 +21,40 @@ _READERS = {
 }
 
 
-@click.group()
-def cli():
-    setup_logging()
+def input_options(command):
+    """Add the INPUT_PATH argument and the --file-type option shared by the commands reading transactions."""
+    command = click.option(
+        "--file-type",
+        type=click.Choice(list(_READERS), case_sensitive=False),
+        default="ofx",
+        show_default=True,
+        help="Type of files to read from INPUT_PATH",
+    )(command)
+    return click.argument("input_path", default="data/boursobank", type=click.Path(exists=True))(command)
 
 
-@cli.command()
-@click.argument("input_path", default="data/boursobank", type=click.Path(exists=True))
-@click.option(
-    "--file-type",
-    type=click.Choice(list(_READERS), case_sensitive=False),
-    default="ofx",
-    show_default=True,
-    help="Type of files to read from INPUT_PATH",
-)
-@click.option("--parquet", is_flag=True, help="Also output a parquet file for pandas")
-def extract(input_path: str, file_type: str, parquet: bool):
-    """Extract and summarize transactions from the CSV, OFX or QIF files found in INPUT_PATH."""
+def read_transactions(input_path: str, file_type: str) -> list[Transaction]:
+    """Read the transactions of the files of the given type found in input_path, fail if there is none."""
     get_files, reader_class = _READERS[file_type]
     paths = get_files(FileReader(input_path))
     transactions = reader_class().read(paths)
     click.echo(f"Read {len(transactions)} transactions from {len(paths)} {file_type.upper()} files.")
     if not transactions:
         raise click.ClickException(f"No transactions found in {file_type.upper()} files in {input_path}.")
+    return transactions
+
+
+@click.group()
+def cli():
+    setup_logging()
+
+
+@cli.command()
+@input_options
+@click.option("--parquet", is_flag=True, help="Also output a parquet file for pandas")
+def extract(input_path: str, file_type: str, parquet: bool):
+    """Extract and summarize transactions from the CSV, OFX or QIF files found in INPUT_PATH."""
+    transactions = read_transactions(input_path, file_type)
 
     accounts = sorted({t.account.account_label for t in transactions})
     dates = [t.dateOperation for t in transactions]
