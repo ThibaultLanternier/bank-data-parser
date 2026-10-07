@@ -5,7 +5,7 @@ import pytest
 from entities.account import Account
 from entities.label import TransactionType
 from entities.source_type import SourceType
-from services.qif_bank_data_reader import QIFBankDataReader, UNKNOWN_ACCOUNT
+from services.qif_bank_data_reader import UNKNOWN_ACCOUNT, QIFBankDataReader
 
 QIF_CONTENT = """!Type:Bank
 D02/10/2026
