@@ -1,6 +1,6 @@
 # bilig
 
-CLI tool for extracting and processing bank transaction data from Boursobank CSV files.
+CLI tool for extracting and processing bank transaction data from Boursobank CSV and QIF files.
 
 ## Run commands
 
@@ -11,8 +11,8 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 ## Project structure
 
 - `src/bilig-cli.py` — CLI entry point (uses click)
-- `src/entities/` — data classes: `transaction`, `Account`, `Category`, `Label`
-- `src/services/` — business logic: `CsvBankDataReader`, `FileReader`, `FileRecorder`
+- `src/entities/` — data classes: `transaction`, `Account`, `Category`, `Label`, `SourceType`
+- `src/services/` — business logic: `CsvBankDataReader`, `QIFBankDataReader`, `FileReader`, `FileRecorder`
 - `src/output/` — generated CSV files (gitignored)
 
 ## CSV format
@@ -21,6 +21,13 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - French number format: spaces as thousands separator, comma as decimal
 - Date format: `%Y-%m-%d`
 - Pipe-separated label parts (raw label before `|`, normalized after)
+
+## QIF format
+
+- `!Type:Bank` sections, records terminated by `^`
+- Dates are day first (`dd/mm/yyyy`), amounts use `.` as decimal separator
+- No account information unless an `!Account` block is present (falls back to `UNKNOWN`)
+- Payee (`P`) is used for both label parts (`payee | payee`)
 
 ## Conventions
 
