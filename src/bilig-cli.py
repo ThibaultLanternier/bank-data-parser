@@ -8,9 +8,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from logging_config import setup_logging
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
+from services.file_recorder import FileRecorder
 from services.ofx_bank_data_reader import OfxBankDataReader
 from services.qif_bank_data_reader import QifBankDataReader
-from services.file_recorder import FileRecorder
 from services.transaction_enhancer import TransactionEnhancer
 
 
@@ -45,9 +45,9 @@ def extract(input_path: str, parquet: bool):
     oldest = min(dates).date()
     most_recent = max(dates).date()
 
-    click.echo(f"Starting transactions analysis and enhancement...")
+    click.echo("Starting transactions analysis and enhancement...")
     enhanced_transactions = TransactionEnhancer(transactions).get_enhanced_list()
-    click.echo(f"Transactions analysis and enhancement completed.")
+    click.echo("Transactions analysis and enhancement completed.")
 
     recorder = FileRecorder()
     csv_path = recorder.write_csv(enhanced_transactions)
