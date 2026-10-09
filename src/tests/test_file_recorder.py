@@ -6,6 +6,7 @@ import pytest
 
 from entities.account import Account
 from entities.category import Category
+from entities.group import Group, GroupSource
 from entities.label import Label
 from entities.source_type import SourceType
 from entities.transaction import Transaction
@@ -45,6 +46,13 @@ def transactions():
     ]
 
 
+@pytest.fixture
+def grouped_transactions(transactions):
+    transactions[0].group = Group("FOOD", ["lidl"])
+    transactions[0].group_source = GroupSource.CLUSTER
+    return transactions
+
+
 class TestFileRecorder:
     def test_write_csv_includes_source_columns(self, recorder, transactions):
         path = recorder.write_csv(transactions, "out.csv")
@@ -66,3 +74,20 @@ class TestFileRecorder:
         assert df["bank_transaction_type"][0] == "DEBIT"
         assert df["source_type"].isna()[1]
         assert df["bank_transaction_type"].isna()[1]
+
+    def test_write_csv_includes_group_columns(self, recorder, grouped_transactions):
+        path = recorder.write_csv(grouped_transactions, "out.csv")
+
+        with open(path, encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f, delimiter=";")
+            rows = list(reader)
+
+        assert reader.fieldnames == file_recorder.FIELDNAMES
+        assert (rows[0]["group"], rows[0]["group_source"]) == ("FOOD", "cluster")
+        assert (rows[1]["group"], rows[1]["group_source"]) == ("", "")
+
+    def test_write_parquet_includes_group_columns(self, recorder, grouped_transactions):
+        df = pd.read_parquet(recorder.write_parquet(grouped_transactions, "out.parquet"))
+
+        assert (df["group"][0], df["group_source"][0]) == ("FOOD", "cluster")
+        assert df["group"].isna()[1] and df["group_source"].isna()[1]
