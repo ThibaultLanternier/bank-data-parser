@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from enum import Enum
+from typing import Protocol
 
 from entities.group import Group
 from entities.transaction import Transaction
@@ -52,6 +54,39 @@ class PatternPreview:
     outside: int  # transactions of the other clusters matched by the pattern
 
 
+@dataclass
+class Assignment:
+    cluster_id: str
+    group_name: str
+    pattern: str
+    added: bool  # False when the pattern was already in the group: undo leaves the file unchanged
+
+
+class Action(Enum):
+    ASSIGN = "assign"
+    SKIP = "skip"
+    UNDO = "undo"
+    QUIT = "quit"
+
+
+class CategorizeUi(Protocol):
+    """User interaction of the session, a None answer means the user quits (e.g. Ctrl+C)."""
+
+    def show_cluster(self, review: ClusterReview, progress: Progress) -> None: ...
+
+    def ask_action(self, can_undo: bool) -> Action | None: ...
+
+    def ask_pattern(self, default: str) -> str | None: ...
+
+    def show_preview(self, preview: PatternPreview) -> None: ...
+
+    def ask_group(self, group_names: list[str]) -> str | None: ...
+
+    def confirm_shadowed(self, shadowing: list[Group]) -> bool | None: ...
+
+    def show_message(self, message: str) -> None: ...
+
+
 class CategorizeSession:
     """Interactive labelling of the clusters of enhanced transactions, answers are saved in the groups file."""
 
@@ -61,6 +96,7 @@ class CategorizeSession:
         self.groups = groups_file.load()
         self._skipped: set[str] = set()
         self._reviewed = 0
+        self.assignments: list[Assignment] = []
         self.enhancer.assign_groups(self.groups)
 
     def queue(self) -> list[ClusterReview]:
@@ -112,3 +148,85 @@ class CategorizeSession:
                 if group is not None and group not in shadowing:
                     shadowing.append(group)
         return sorted(shadowing, key=self.groups.index)
+
+    def assign(self, review: ClusterReview, group_name: str, pattern: str) -> Assignment:
+        """Save the pattern in the group and assign the groups again to all the clusters."""
+        existing = next((g for g in self.groups if g.name == group_name), None)
+        assignment = Assignment(review.cluster_id, group_name, pattern, existing is None or pattern not in existing.patterns)
+        self.groups_file.add_pattern(group_name, pattern)
+        self.assignments.append(assignment)
+        self._reviewed += 1
+        self._reload()
+        return assignment
+
+    def undo(self) -> Assignment | None:
+        """Remove the pattern of the last assignment from the groups file."""
+        if not self.assignments:
+            return None
+        assignment = self.assignments.pop()
+        if assignment.added:
+            self.groups_file.remove_pattern(assignment.group_name, assignment.pattern)
+        self._reviewed -= 1
+        self._reload()
+        return assignment
+
+    def skip(self, review: ClusterReview) -> None:
+        self._skipped.add(review.cluster_id)
+        self._reviewed += 1
+
+    def run(self, ui: CategorizeUi) -> list[Assignment]:
+        """Review the clusters until none is left or the user quits, return the assignments kept."""
+        next_cluster_id: str | None = None
+        while True:
+            queue = self.queue()
+            if not queue:
+                ui.show_message("No cluster left to review.")
+                break
+            review = next((r for r in queue if r.cluster_id == next_cluster_id), queue[0])
+            next_cluster_id = None
+            ui.show_cluster(review, self.progress())
+
+            action = ui.ask_action(can_undo=bool(self.assignments))
+            if action is None or action == Action.QUIT:
+                break
+            if action == Action.SKIP:
+                self.skip(review)
+                continue
+            if action == Action.UNDO:
+                undone = self.undo()
+                if undone is None:
+                    ui.show_message("Nothing to undo.")
+                else:
+                    ui.show_message(f"Removed {undone.pattern!r} from {undone.group_name}.")
+                    next_cluster_id = undone.cluster_id
+                continue
+
+            pattern = ui.ask_pattern(self.proposed_pattern(review))
+            if pattern is None:
+                break
+            pattern = pattern.strip()
+            if not pattern:
+                continue
+            ui.show_preview(self.preview(review, pattern))
+
+            group_name = ui.ask_group([g.name for g in self.groups])
+            if group_name is None:
+                break
+            group_name = group_name.strip()
+            if not group_name:
+                continue
+
+            shadowing = self.shadowing_groups(pattern, group_name)
+            if shadowing:
+                confirmed = ui.confirm_shadowed(shadowing)
+                if confirmed is None:
+                    break
+                if not confirmed:
+                    continue
+
+            self.assign(review, group_name, pattern)
+        return self.assignments
+
+    def _reload(self) -> None:
+        self.groups = self.groups_file.load()
+        self.enhancer.assign_groups(self.groups)
