@@ -3,6 +3,7 @@ from datetime import datetime
 
 from entities.account import Account
 from entities.category import Category
+from entities.group import Group, GroupSource
 from entities.label import Label
 from entities.source_type import SourceType
 
@@ -37,6 +38,8 @@ class Transaction:
         self.cluster_id: str = ""
         self.periodicity: int | None = None
         self.periodicity_confidence: float | None = None
+        self.group: Group | None = None
+        self.group_source: GroupSource | None = None
 
     @property
     def id(self) -> str:
