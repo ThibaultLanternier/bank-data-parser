@@ -6,11 +6,13 @@ import click
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+from entities.group import Group
 from entities.transaction import Transaction
 from logging_config import setup_logging
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
 from services.file_recorder import FileRecorder
+from services.groups_file import GroupsFile
 from services.ofx_bank_data_reader import OfxBankDataReader
 from services.qif_bank_data_reader import QifBankDataReader
 from services.transaction_enhancer import TransactionEnhancer
@@ -21,6 +23,8 @@ _READERS = {
     "ofx": (FileReader.get_ofx_files, OfxBankDataReader),
     "qif": (FileReader.get_qif_files, QifBankDataReader),
 }
+
+DEFAULT_GROUPS_PATH = "data/groups.yaml"
 
 
 def input_options(command):
@@ -33,6 +37,28 @@ def input_options(command):
         help="Type of files to read from INPUT_PATH",
     )(command)
     return click.argument("input_path", default="data/boursobank", type=click.Path(exists=True))(command)
+
+
+def groups_option(command):
+    """Add the --groups option giving the YAML file of the user groups."""
+    return click.option(
+        "--groups",
+        "groups_path",
+        type=click.Path(dir_okay=False),
+        default=DEFAULT_GROUPS_PATH,
+        show_default=True,
+        help="YAML file mapping each group to its label patterns",
+    )(command)
+
+
+def load_groups(groups_path: str) -> list[Group]:
+    """Groups of the groups file, none when it does not exist, fail when it is invalid."""
+    try:
+        groups = GroupsFile(groups_path).load()
+    except ValueError as e:
+        raise click.ClickException(str(e)) from e
+    click.echo(f"Loaded {len(groups)} groups from {groups_path}.")
+    return groups
 
 
 def read_transactions(input_path: str, file_type: str) -> list[Transaction]:
@@ -53,9 +79,11 @@ def cli():
 
 @cli.command()
 @input_options
+@groups_option
 @click.option("--parquet", is_flag=True, help="Also output a parquet file for pandas")
-def extract(input_path: str, file_type: str, parquet: bool):
+def extract(input_path: str, file_type: str, groups_path: str, parquet: bool):
     """Extract and summarize transactions from the CSV, OFX or QIF files found in INPUT_PATH."""
+    groups = load_groups(groups_path)
     transactions = read_transactions(input_path, file_type)
 
     accounts = sorted({t.account.account_label for t in transactions})
@@ -64,7 +92,7 @@ def extract(input_path: str, file_type: str, parquet: bool):
     most_recent = max(dates).date()
 
     click.echo("Starting transactions analysis and enhancement...")
-    enhanced_transactions = TransactionEnhancer(transactions).get_enhanced_list()
+    enhanced_transactions = TransactionEnhancer(transactions, groups).get_enhanced_list()
     click.echo("Transactions analysis and enhancement completed.")
 
     recorder = FileRecorder()

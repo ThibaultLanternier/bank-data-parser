@@ -20,7 +20,7 @@
 
 - [x] 4.1 Make `TransactionEnhancer` accept optional `groups`, run `GroupMatcher.assign` after clustering, copy group fields onto `by_id` transactions and keep the clusters on the enhancer; verify with new cases in `src/tests/test_transaction_enhancer.py` (direct, inherited, conflict, no groups)
 - [x] 4.2 Add `group` and `group_source` columns to `FileRecorder` CSV and parquet output; verify with `src/tests/test_file_recorder.py` (filled and empty values, existing columns unchanged)
-- [ ] 4.3 Add the `--groups` option (default `data/groups.yaml`) to `extract`, turning file errors into a `click.ClickException`; verify with `src/tests/test_bilig_cli.py` (custom file, missing file, invalid file) and a manual `poetry run python src/bilig-cli.py extract` run
+- [x] 4.3 Add the `--groups` option (default `data/groups.yaml`) to `extract`, turning file errors into a `click.ClickException`; verify with `src/tests/test_bilig_cli.py` (custom file, missing file, invalid file) and a manual `poetry run python src/bilig-cli.py extract` run
 - [ ] 4.4 Document the groups file format, matching rules and the new output columns in `AGENTS.md` and `README.md`; verify the documented example file loads with `GroupsFile.load()`
 
 ## 5. Categorize session

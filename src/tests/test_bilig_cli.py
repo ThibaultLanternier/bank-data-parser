@@ -64,6 +64,40 @@ class TestExtractCommand:
         assert result.exit_code == 2
 
 
+class TestExtractGroups:
+    def _rows(self, input_dir):
+        output = services.file_recorder.OUTPUT_DIR
+        [csv_path] = output.glob("*.csv")
+        return csv_path.read_text(encoding="utf-8-sig").splitlines()
+
+    def test_uses_given_groups_file(self, input_dir, tmp_path):
+        groups = tmp_path / "groups.yaml"
+        groups.write_text("FOOD:\n  - lidl\n", encoding="utf-8")
+
+        result = CliRunner().invoke(bilig_cli.cli, ["extract", str(input_dir), "--groups", str(groups)])
+
+        assert result.exit_code == 0, result.output
+        assert "Loaded 1 groups" in result.output
+        header, row = self._rows(input_dir)
+        values = dict(zip(header.split(";"), row.split(";")))
+        assert (values["group"], values["group_source"]) == ("FOOD", "direct")
+
+    def test_missing_groups_file_means_no_group(self, input_dir, tmp_path):
+        result = CliRunner().invoke(bilig_cli.cli, ["extract", str(input_dir), "--groups", str(tmp_path / "none.yaml")])
+
+        assert result.exit_code == 0, result.output
+        assert "Loaded 0 groups" in result.output
+
+    def test_fails_on_invalid_groups_file(self, input_dir, tmp_path):
+        groups = tmp_path / "groups.yaml"
+        groups.write_text("FOOD: lidl\n", encoding="utf-8")
+
+        result = CliRunner().invoke(bilig_cli.cli, ["extract", str(input_dir), "--groups", str(groups)])
+
+        assert result.exit_code == 1
+        assert "Invalid groups file" in result.output
+
+
 class TestReportCommand:
     def test_reports_each_month_of_each_year(self, input_dir):
         result = CliRunner().invoke(bilig_cli.cli, ["report", str(input_dir), "--file-type", "qif"])
