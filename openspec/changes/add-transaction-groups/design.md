@@ -31,11 +31,11 @@
 - `services/groups_file.py` — `GroupsFile(path)`: `load() -> list[Group]`, `add_pattern(group_name, pattern)`, `remove_pattern(group_name, pattern)`. Uses `ruamel.yaml` round-trip mode so comments and order survive writes. Missing file → empty list; `add_pattern` creates it. Removing the last pattern of a group removes the group (keeps undo of a new group clean). Validation errors raise a `ValueError` with the file path and offending key; the CLI turns it into a `click.ClickException`.
 - `services/group_matcher.py` — `GroupMatcher(groups)`:
   - `match(label) -> Group | None`: first group in order whose pattern matches the normalized label.
-  - `assign(clusters: dict[str, TransactionCluster])`: for each cluster, sets direct matches, collects the set of directly matched groups; if exactly one, unmatched transactions inherit with `CLUSTER`; returns per-cluster status (`grouped`, `partial`, `ungrouped`, `conflict`) for the CLI.
+  - `assign(clusters: dict[str, TransactionCluster])`: for each cluster, sets direct matches, collects the set of directly matched groups; if exactly one, unmatched transactions inherit with `CLUSTER`; returns per-cluster status (`grouped`, `ungrouped`, `conflict`) and the directly matched groups for the CLI.
 - `TransactionEnhancer.__init__` takes an optional `groups: list[Group]` (default empty, so existing callers and tests are unchanged). `get_enhanced_list()` calls `GroupMatcher(groups).assign(clusters)` right after clustering and periodicity. As with `cluster_id`, the group fields are copied onto `self._by_id[t.id]`, since `by_id` deduplicates transactions and may hold a different object than the cluster. The clusters dict is kept on the enhancer (`self.clusters`) so `categorize` can reuse it instead of clustering twice.
 
 ### Ordering and recomputation in `categorize`
-- The session clusters once. After each assignment it reloads the groups and re-runs `GroupMatcher.assign` on the same clusters (cheap: substring checks over ~2k labels), then picks the next cluster needing review (`ungrouped` or `conflict`, or `partial` with ungrouped transactions — i.e. any cluster with at least one transaction without group), sorted by decreasing `sum(abs(amount))`.
+- The session clusters once. After each assignment it reloads the groups and re-runs `GroupMatcher.assign` on the same clusters (cheap: substring checks over ~2k labels), then picks the next cluster needing review (any cluster with at least one transaction without group, i.e. `ungrouped` or `conflict` with unmatched transactions), sorted by decreasing `sum(abs(amount))`.
 - Clustering is done on all transactions, not only ungrouped ones, so inheritance in `categorize` matches `extract` exactly.
 
 ### Pattern proposal

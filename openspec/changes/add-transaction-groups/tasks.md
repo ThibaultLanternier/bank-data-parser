@@ -9,7 +9,7 @@
 
 - [x] 2.1 Create `src/entities/group.py` with `Group(name, patterns)`, pattern normalization (lowercase, accents stripped), `matches(normalized_label)` and the `GroupSource` enum; verify with `src/tests/test_group.py` (case/accent insensitive match, no match, empty pattern never matches)
 - [x] 2.2 Add `group` and `group_source` attributes (default `None`) to `transaction`; verify existing tests still pass with `poetry run pytest`
-- [ ] 2.3 Create `src/services/group_matcher.py` with `match(label)` (first group in file order wins) and `assign(clusters)` (direct match wins, unanimous inheritance with `cluster` source, conflicts not inherited, per-cluster status); verify with `src/tests/test_group_matcher.py` covering every scenario of the `transaction-groups` matching requirements
+- [x] 2.3 Create `src/services/group_matcher.py` with `match(label)` (first group in file order wins) and `assign(clusters)` (direct match wins, unanimous inheritance with `cluster` source, conflicts not inherited, per-cluster status); verify with `src/tests/test_group_matcher.py` covering every scenario of the `transaction-groups` matching requirements
 
 ## 3. Groups file
 
