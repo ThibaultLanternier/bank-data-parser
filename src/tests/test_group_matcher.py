@@ -15,7 +15,8 @@ SHOPPING = Group("SHOPPING", ["amazon"])
 
 def _transaction(label: str, amount: float = -10.0) -> Transaction:
     day = datetime(2024, 1, 1)
-    return Transaction(day, day, Label(f"{label} | {label.upper()}"), Category("misc"), Account("00001", "Main"), amount)
+    account = Account("00001", "Main")
+    return Transaction(day, day, Label(f"{label} | {label.upper()}"), Category("misc"), account, amount)
 
 
 class TestMatch:

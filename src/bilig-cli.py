@@ -157,7 +157,8 @@ class QuestionaryUi:
             click.secho(f"Conflict between {', '.join(g.name for g in review.match.groups)}", fg="yellow")
         for t in review.recent_transactions(self.RECENT_TRANSACTIONS):
             group = f"  [{t.group.name}]" if t.group else ""
-            click.echo(f"  {t.dateOperation:%Y-%m-%d}  {t.label.get_label()[:50]:<50}  {_format_amount(t.amount):>14}{group}")
+            label = t.label.get_label()[:50]
+            click.echo(f"  {t.dateOperation:%Y-%m-%d}  {label:<50}  {_format_amount(t.amount):>14}{group}")
         hidden = len(review.cluster.transactions) - self.RECENT_TRANSACTIONS
         if hidden > 0:
             click.echo(f"  ... {hidden} more")
@@ -166,7 +167,9 @@ class QuestionaryUi:
         choices = [
             questionary.Choice("Assign a group", Action.ASSIGN, shortcut_key="a"),
             questionary.Choice("Skip", Action.SKIP, shortcut_key="s"),
-            questionary.Choice("Undo last assignment", Action.UNDO, shortcut_key="u", disabled=None if can_undo else "nothing to undo"),
+            questionary.Choice(
+                "Undo last assignment", Action.UNDO, shortcut_key="u", disabled=None if can_undo else "nothing to undo"
+            ),
             questionary.Choice("Quit", Action.QUIT, shortcut_key="q"),
         ]
         return questionary.select("Action", choices=choices, use_shortcuts=True).ask()
@@ -184,7 +187,8 @@ class QuestionaryUi:
 
     def confirm_shadowed(self, shadowing: list[Group]) -> bool | None:
         names = ", ".join(g.name for g in shadowing)
-        return questionary.confirm(f"{names} listed before already match some of these transactions, save anyway?", default=False).ask()
+        message = f"{names} listed before already match some of these transactions, save anyway?"
+        return questionary.confirm(message, default=False).ask()
 
     def show_message(self, message: str) -> None:
         click.echo(message)

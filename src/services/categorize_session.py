@@ -152,7 +152,8 @@ class CategorizeSession:
     def assign(self, review: ClusterReview, group_name: str, pattern: str) -> Assignment:
         """Save the pattern in the group and assign the groups again to all the clusters."""
         existing = next((g for g in self.groups if g.name == group_name), None)
-        assignment = Assignment(review.cluster_id, group_name, pattern, existing is None or pattern not in existing.patterns)
+        added = existing is None or pattern not in existing.patterns
+        assignment = Assignment(review.cluster_id, group_name, pattern, added)
         self.groups_file.add_pattern(group_name, pattern)
         self.assignments.append(assignment)
         self._reviewed += 1

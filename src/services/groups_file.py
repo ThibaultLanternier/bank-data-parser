@@ -49,7 +49,7 @@ class GroupsFile:
             data = self._yaml.load(f)
         if data is None:
             return CommentedMap()
-        if not isinstance(data, dict):
+        if not isinstance(data, CommentedMap):
             raise ValueError(f"Invalid groups file {self.path}: expected a mapping of group names to lists of patterns")
         for name, patterns in data.items():
             if patterns is None:
