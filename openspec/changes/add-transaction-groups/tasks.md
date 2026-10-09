@@ -26,7 +26,7 @@
 ## 5. Categorize session
 
 - [x] 5.1 Create `src/services/categorize_session.py` with the review queue (clusters with ungrouped transactions or conflicts, sorted by decreasing total absolute amount) and progress figures; verify with `src/tests/test_categorize_session.py`
-- [ ] 5.2 Add pattern proposal (most frequent normalized label), inside/outside match counts and shadowing detection; verify with unit tests on a small cluster set
+- [x] 5.2 Add pattern proposal (most frequent normalized label), inside/outside match counts and shadowing detection; verify with unit tests on a small cluster set
 - [ ] 5.3 Add the session loop with injected prompt functions: assign to existing or new group, skip, undo (removes pattern, cluster presented again), quit with summary, save and recompute after each answer; verify with tests driving scripted answers against a `tmp_path` groups file
 
 ## 6. Categorize command

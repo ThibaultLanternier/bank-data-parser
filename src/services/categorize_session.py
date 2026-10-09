@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
+from entities.group import Group
 from entities.transaction import Transaction
 from entities.transaction_cluster import TransactionCluster
-from services.group_matcher import ClusterMatch
+from services.group_matcher import ClusterMatch, GroupMatcher
 from services.groups_file import GroupsFile
 from services.transaction_enhancer import TransactionEnhancer
 
@@ -45,6 +46,12 @@ class Progress:
         return self.grouped_transactions / self.total_transactions if self.total_transactions else 0.0
 
 
+@dataclass
+class PatternPreview:
+    inside: int  # transactions of the reviewed cluster matched by the pattern
+    outside: int  # transactions of the other clusters matched by the pattern
+
+
 class CategorizeSession:
     """Interactive labelling of the clusters of enhanced transactions, answers are saved in the groups file."""
 
@@ -73,3 +80,35 @@ class CategorizeSession:
             grouped_transactions=sum(1 for t in transactions if t.group is not None),
             total_transactions=len(transactions),
         )
+
+    @staticmethod
+    def proposed_pattern(review: ClusterReview) -> str:
+        """Most frequent normalized label of the cluster."""
+        return review.label
+
+    def preview(self, review: ClusterReview, pattern: str) -> PatternPreview:
+        matcher = Group("", [pattern])
+        inside = sum(1 for t in review.cluster.transactions if matcher.matches(t.label.get_normalized_label()))
+        total = sum(
+            1
+            for cluster in self.enhancer.clusters.values()
+            for t in cluster.transactions
+            if matcher.matches(t.label.get_normalized_label())
+        )
+        return PatternPreview(inside, total - inside)
+
+    def shadowing_groups(self, pattern: str, group_name: str) -> list[Group]:
+        """Groups listed before group_name (all groups when it is new) already matching transactions of the pattern."""
+        names = [g.name for g in self.groups]
+        earlier = self.groups[: names.index(group_name)] if group_name in names else self.groups
+        matcher = Group("", [pattern])
+        earlier_matcher = GroupMatcher(earlier)
+        shadowing: list[Group] = []
+        for cluster in self.enhancer.clusters.values():
+            for t in cluster.transactions:
+                if not matcher.matches(t.label.get_normalized_label()):
+                    continue
+                group = earlier_matcher.match(t.label)
+                if group is not None and group not in shadowing:
+                    shadowing.append(group)
+        return sorted(shadowing, key=self.groups.index)

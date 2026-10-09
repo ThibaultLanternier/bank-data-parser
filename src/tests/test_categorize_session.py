@@ -70,3 +70,32 @@ class TestProgress:
         assert (progress.grouped_transactions, progress.total_transactions) == (2, 7)
         assert progress.remaining == 3
         assert progress.grouped_share == pytest.approx(2 / 7)
+
+
+class TestPatternProposal:
+    def test_proposes_most_frequent_normalized_label(self, transactions, groups_path):
+        session = _session(transactions, groups_path)
+        review = session.queue()[0]
+
+        assert session.proposed_pattern(review) == "acme corp salaire"
+
+    def test_preview_counts_matches_inside_and_outside_the_cluster(self, transactions, groups_path):
+        session = _session(transactions, groups_path)
+        [amazon] = [r for r in session.queue() if r.label.startswith("amazon")]
+
+        preview = session.preview(amazon, "amazon mktp fr")
+        broad = session.preview(amazon, "a")
+
+        assert (preview.inside, preview.outside) == (1, 0)
+        assert (broad.inside, broad.outside) == (3, 4)
+
+    def test_new_group_is_shadowed_by_existing_groups(self, transactions, groups_path):
+        session = _session(transactions, groups_path, "ENERGY:\n  - edf\n")
+
+        assert [g.name for g in session.shadowing_groups("edf particuliers", "BILLS")] == ["ENERGY"]
+
+    def test_existing_group_is_shadowed_only_by_earlier_groups(self, transactions, groups_path):
+        session = _session(transactions, groups_path, "FIRST:\n  - edf\nBILLS:\n  - x\nLAST:\n  - acme\n")
+
+        assert [g.name for g in session.shadowing_groups("edf", "BILLS")] == ["FIRST"]
+        assert session.shadowing_groups("acme", "BILLS") == []
