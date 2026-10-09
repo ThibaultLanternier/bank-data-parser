@@ -2,8 +2,8 @@
 
 ## 1. Setup
 
-- [ ] 1.1 Add `ruamel.yaml` and `questionary` with `poetry add` and verify `poetry run python -c "import ruamel.yaml, questionary"` succeeds
-- [ ] 1.2 Add `data/groups.yaml` to `.gitignore` and verify with `git check-ignore data/groups.yaml`
+- [x] 1.1 Add `ruamel.yaml` and `questionary` with `poetry add` and verify `poetry run python -c "import ruamel.yaml, questionary"` succeeds
+- [x] 1.2 Add `data/groups.yaml` to `.gitignore` and verify with `git check-ignore data/groups.yaml`
 
 ## 2. Group entity and matching
 
