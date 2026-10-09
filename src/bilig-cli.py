@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 import click
+import questionary
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -12,6 +13,7 @@ from logging_config import setup_logging
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
 from services.file_recorder import FileRecorder
+from services.categorize_session import Action, CategorizeSession, ClusterReview, PatternPreview, Progress
 from services.groups_file import GroupsFile
 from services.ofx_bank_data_reader import OfxBankDataReader
 from services.qif_bank_data_reader import QifBankDataReader
@@ -131,6 +133,78 @@ def report(input_path: str, file_type: str):
             click.echo(f"    Total Transfers : {_format_amount(summary.total_transfers)}")
             click.echo(f"    Number of transactions : {summary.transaction_count}")
             click.echo(f"    Bank accounts : {', '.join(summary.account_numbers)}")
+
+
+
+class QuestionaryUi:
+    """Terminal prompts of the categorize session, questionary returns None on Ctrl+C."""
+
+    RECENT_TRANSACTIONS = 8
+
+    def show_cluster(self, review: ClusterReview, progress: Progress) -> None:
+        click.echo()
+        click.echo(
+            f"[{progress.reviewed + 1} / {progress.reviewed + progress.remaining}]  "
+            f"{progress.grouped_share:.0%} of transactions grouped"
+        )
+        periodicity = f"   every ~{review.periodicity} days" if review.periodicity else ""
+        click.secho(
+            f"Cluster \"{review.label}\"   {len(review.cluster.transactions)} transactions   "
+            f"{_format_amount(review.total_amount)}{periodicity}",
+            bold=True,
+        )
+        if review.match.groups:
+            click.secho(f"Conflict between {', '.join(g.name for g in review.match.groups)}", fg="yellow")
+        for t in review.recent_transactions(self.RECENT_TRANSACTIONS):
+            group = f"  [{t.group.name}]" if t.group else ""
+            click.echo(f"  {t.dateOperation:%Y-%m-%d}  {t.label.get_label()[:50]:<50}  {_format_amount(t.amount):>14}{group}")
+        hidden = len(review.cluster.transactions) - self.RECENT_TRANSACTIONS
+        if hidden > 0:
+            click.echo(f"  ... {hidden} more")
+
+    def ask_action(self, can_undo: bool) -> Action | None:
+        choices = [
+            questionary.Choice("Assign a group", Action.ASSIGN, shortcut_key="a"),
+            questionary.Choice("Skip", Action.SKIP, shortcut_key="s"),
+            questionary.Choice("Undo last assignment", Action.UNDO, shortcut_key="u", disabled=None if can_undo else "nothing to undo"),
+            questionary.Choice("Quit", Action.QUIT, shortcut_key="q"),
+        ]
+        return questionary.select("Action", choices=choices, use_shortcuts=True).ask()
+
+    def ask_pattern(self, default: str) -> str | None:
+        return questionary.text("Pattern", default=default).ask()
+
+    def show_preview(self, preview: PatternPreview) -> None:
+        click.echo(f"  matches {preview.inside} transactions of this cluster, {preview.outside} outside")
+
+    def ask_group(self, group_names: list[str]) -> str | None:
+        if not group_names:
+            return questionary.text("Group (new)").ask()
+        return questionary.autocomplete("Group", choices=group_names).ask()
+
+    def confirm_shadowed(self, shadowing: list[Group]) -> bool | None:
+        names = ", ".join(g.name for g in shadowing)
+        return questionary.confirm(f"{names} listed before already match some of these transactions, save anyway?", default=False).ask()
+
+    def show_message(self, message: str) -> None:
+        click.echo(message)
+
+
+@cli.command()
+@input_options
+@groups_option
+def categorize(input_path: str, file_type: str, groups_path: str):
+    """Interactively assign groups to the clusters of transactions of INPUT_PATH, saved in the groups file."""
+    load_groups(groups_path)
+    transactions = read_transactions(input_path, file_type)
+    enhancer = TransactionEnhancer(transactions)
+    enhancer.get_enhanced_list()
+
+    assignments = CategorizeSession(enhancer, GroupsFile(groups_path)).run(QuestionaryUi())
+
+    click.echo(f"\n{len(assignments)} assignments saved to {groups_path}.")
+    for a in assignments:
+        click.echo(f"  {a.group_name}: {a.pattern}")
 
 
 if __name__ == "__main__":

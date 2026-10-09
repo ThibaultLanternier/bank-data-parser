@@ -31,7 +31,7 @@
 
 ## 6. Categorize command
 
-- [ ] 6.1 Add the `categorize` command to `src/bilig-cli.py` (input path, `--file-type`, `--groups`) wiring `questionary` prompts (autocomplete for groups, text with default for pattern) and cluster display (label, count, total, periodicity, recent transactions); handle Ctrl+C as quit; verify with a `test_bilig_cli.py` test that runs it with no cluster to review, and a manual session on `data/boursobank`
+- [x] 6.1 Add the `categorize` command to `src/bilig-cli.py` (input path, `--file-type`, `--groups`) wiring `questionary` prompts (autocomplete for groups, text with default for pattern) and cluster display (label, count, total, periodicity, recent transactions); handle Ctrl+C as quit; verify with a `test_bilig_cli.py` test that runs it with no cluster to review, and a manual session on `data/boursobank`
 - [ ] 6.2 Document the `categorize` command in `AGENTS.md` (run commands) and `README.md`; verify the documented command runs as written
 
 ## 7. Integration check

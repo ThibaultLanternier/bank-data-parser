@@ -98,6 +98,27 @@ class TestExtractGroups:
         assert "Invalid groups file" in result.output
 
 
+class TestCategorizeCommand:
+    def test_exits_when_no_cluster_is_left_to_review(self, input_dir, tmp_path):
+        groups = tmp_path / "groups.yaml"
+        groups.write_text("FOOD:\n  - lidl\n", encoding="utf-8")
+
+        result = CliRunner().invoke(bilig_cli.cli, ["categorize", str(input_dir), "--groups", str(groups)])
+
+        assert result.exit_code == 0, result.output
+        assert "No cluster left to review." in result.output
+        assert "0 assignments saved to" in result.output
+
+    def test_fails_on_invalid_groups_file(self, input_dir, tmp_path):
+        groups = tmp_path / "groups.yaml"
+        groups.write_text("- lidl\n", encoding="utf-8")
+
+        result = CliRunner().invoke(bilig_cli.cli, ["categorize", str(input_dir), "--groups", str(groups)])
+
+        assert result.exit_code == 1
+        assert "Invalid groups file" in result.output
+
+
 class TestReportCommand:
     def test_reports_each_month_of_each_year(self, input_dir):
         result = CliRunner().invoke(bilig_cli.cli, ["report", str(input_dir), "--file-type", "qif"])
