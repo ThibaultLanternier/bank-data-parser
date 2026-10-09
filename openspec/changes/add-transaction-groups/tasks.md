@@ -13,8 +13,8 @@
 
 ## 3. Groups file
 
-- [ ] 3.1 Create `src/services/groups_file.py` with `GroupsFile.load()` (missing file → empty list, invalid content → `ValueError` naming file and entry); verify with `src/tests/test_groups_file.py` using `tmp_path`
-- [ ] 3.2 Add `add_pattern` (creates file and group when needed, new group appended at the end) and `remove_pattern` (removes the group when its last pattern goes), preserving comments and order; verify with tests that write a commented file, modify it and check comments and order are kept
+- [x] 3.1 Create `src/services/groups_file.py` with `GroupsFile.load()` (missing file → empty list, invalid content → `ValueError` naming file and entry); verify with `src/tests/test_groups_file.py` using `tmp_path`
+- [x] 3.2 Add `add_pattern` (creates file and group when needed, new group appended at the end) and `remove_pattern` (removes the group when its last pattern goes), preserving comments and order; verify with tests that write a commented file, modify it and check comments and order are kept
 
 ## 4. Extract integration
 
