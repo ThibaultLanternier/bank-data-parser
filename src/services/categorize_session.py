@@ -21,8 +21,9 @@ class ClusterReview:
         return sum(t.amount for t in self.cluster.transactions)
 
     @property
-    def total_absolute_amount(self) -> float:
-        return sum(abs(t.amount) for t in self.cluster.transactions)
+    def external_absolute_amount(self) -> float:
+        """Total absolute amount of the transactions that are not transfers between accounts."""
+        return sum(abs(t.amount) for t in self.cluster.transactions if not t.is_internal)
 
     @property
     def label(self) -> str:
@@ -40,7 +41,7 @@ class ClusterReview:
 class Progress:
     reviewed: int  # clusters answered or skipped during the session
     remaining: int  # clusters still to review
-    grouped_transactions: int
+    grouped_transactions: int  # external transactions only, internal ones need no group
     total_transactions: int
 
     @property
@@ -100,16 +101,21 @@ class CategorizeSession:
         self.enhancer.assign_groups(self.groups)
 
     def queue(self) -> list[ClusterReview]:
-        """Clusters with at least one transaction without group, not skipped, largest total absolute amount first."""
+        """Clusters with at least one external transaction without group, not skipped, largest external amount first.
+
+        Internal transactions (transfers between accounts) need no group: they are never asked about."""
         reviews = [
             ClusterReview(cluster_id, cluster, self.enhancer.cluster_matches[cluster_id])
             for cluster_id, cluster in self.enhancer.clusters.items()
-            if cluster_id not in self._skipped and any(t.group is None for t in cluster.transactions)
+            if cluster_id not in self._skipped
+            and any(t.group is None and not t.is_internal for t in cluster.transactions)
         ]
-        return sorted(reviews, key=lambda r: r.total_absolute_amount, reverse=True)
+        return sorted(reviews, key=lambda r: r.external_absolute_amount, reverse=True)
 
     def progress(self) -> Progress:
-        transactions = [t for cluster in self.enhancer.clusters.values() for t in cluster.transactions]
+        transactions = [
+            t for cluster in self.enhancer.clusters.values() for t in cluster.transactions if not t.is_internal
+        ]
         return Progress(
             reviewed=self._reviewed,
             remaining=len(self.queue()),
