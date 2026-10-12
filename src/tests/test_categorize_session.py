@@ -11,10 +11,21 @@ from services.group_matcher import ClusterStatus
 from services.groups_file import GroupsFile
 from services.transaction_enhancer import TransactionEnhancer
 
+MAIN = Account("00001", "Main")
+SAVINGS = Account("00002", "Savings")
 
-def _transaction(label: str, amount: float, day: int = 1) -> Transaction:
+
+def _transaction(label: str, amount: float, day: int = 1, account: Account = MAIN) -> Transaction:
     date = datetime(2024, 1, day)
-    return Transaction(date, date, Label(f"{label} | {label.upper()}"), Category(""), Account("00001", "Main"), amount)
+    return Transaction(date, date, Label(f"{label} | {label.upper()}"), Category(""), account, amount)
+
+
+def _transfer(amount: float, day: int) -> list[Transaction]:
+    """Offsetting pair between the two accounts, marked internal by the enhancer."""
+    return [
+        _transaction("Vir Sepa Livret A", -amount, day),
+        _transaction("Vir Sepa Livret A", amount, day, SAVINGS),
+    ]
 
 
 @pytest.fixture
@@ -62,6 +73,24 @@ class TestQueue:
         [conflict] = [r for r in session.queue() if r.match.status == ClusterStatus.CONFLICT]
         assert [g.name for g in conflict.match.groups] == ["FR", "DE"]
 
+    def test_internal_only_cluster_is_not_reviewed(self, transactions, groups_path):
+        session = _session(transactions + _transfer(1000.0, 15) + _transfer(1000.0, 16), groups_path)
+
+        assert all("livret" not in r.label for r in session.queue())
+
+    def test_cluster_with_ungrouped_external_transaction_is_reviewed(self, transactions, groups_path):
+        leftover = _transaction("Vir Sepa Livret A", -10.0, 20)
+        session = _session(transactions + _transfer(1000.0, 15) + [leftover], groups_path)
+
+        [review] = [r for r in session.queue() if "livret" in r.label]
+        assert len(review.cluster.transactions) == 3
+
+    def test_orders_clusters_by_external_amount_only(self, transactions, groups_path):
+        leftover = _transaction("Vir Sepa Livret A", -10.0, 20)
+        labels = [r.label for r in _session(transactions + _transfer(1000.0, 15) + [leftover], groups_path).queue()]
+
+        assert labels.index("livret a") > labels.index("amazon mktp fr")
+
 
 class TestProgress:
     def test_counts_grouped_transactions_and_remaining_clusters(self, transactions, groups_path):
@@ -70,6 +99,21 @@ class TestProgress:
         assert (progress.grouped_transactions, progress.total_transactions) == (2, 7)
         assert progress.remaining == 3
         assert progress.grouped_share == pytest.approx(2 / 7)
+
+    def test_ignores_internal_transactions(self, groups_path):
+        transactions = [
+            _transaction("Edf Particuliers", -80.0, 5),
+            _transaction("Edf Particulier", -81.0, 6),
+            _transaction("Acme Corp Salaire", 3000.0, 28),
+            _transaction("Boulangerie Paul", -5.0, 3),
+            *_transfer(1000.0, 15),
+            *_transfer(500.0, 16),
+            *_transfer(200.0, 17),
+        ]
+        progress = _session(transactions, groups_path, "ENERGY:\n  - edf\n").progress()
+
+        assert (progress.grouped_transactions, progress.total_transactions) == (2, 4)
+        assert progress.grouped_share == pytest.approx(0.5)
 
 
 class TestPatternProposal:
