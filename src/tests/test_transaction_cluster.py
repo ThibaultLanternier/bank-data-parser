@@ -1,5 +1,6 @@
-import pytest
 from datetime import datetime
+
+import pytest
 
 from entities.account import Account
 from entities.category import Category
@@ -87,7 +88,7 @@ def noisy_monthly_cluster() -> TransactionCluster:
 class TestTransactionCluster:
     def test_group_transactions(self, cluster: TransactionCluster):
         clusters = list(cluster.group_by_label().values())
-        
+
         assert clusters[0].transactions == [cluster.transactions[0], cluster.transactions[1]]
         assert clusters[1].transactions == [cluster.transactions[2], cluster.transactions[3]]
 

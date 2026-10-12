@@ -1,13 +1,6 @@
 import logging
-import re
-import unicodedata
 from collections import defaultdict
 
-import numpy as np
-from rapidfuzz import fuzz
-from sklearn.cluster import DBSCAN
-
-from entities import transaction_cluster
 from entities.group import Group
 from entities.transaction import Transaction
 from entities.transaction_cluster import TransactionCluster
@@ -88,7 +81,7 @@ class TransactionEnhancer:
                 continue
             pairs.extend(self._find_pairs_in_group(group_transactions))
         return pairs
-    
+
     def _find_large_transactions(self, threshold: float = 10000.0) -> list[Transaction]:
         return [t for t in self._by_id.values() if abs(t.amount) >= threshold]
 

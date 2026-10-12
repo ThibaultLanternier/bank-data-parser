@@ -1,6 +1,6 @@
-import pytest
 
-from entities.label import Label,TransactionType
+from entities.label import Label, TransactionType
+
 
 class TestGetLabel:
     def test_no_clean_label(self):
@@ -14,7 +14,7 @@ class TestGetLabel:
     def test_label_with_avoir(self):
         label = Label("Avoir 22/06/22 Ikea 2 Cb*1643 | AVOIR 22/06/22 IKEA            2 CB*1643")
         assert label.get_label() == "ikea"
-    
+
     def test_label_with_avoir_upper_case(self):
         label = Label("AVOIR 22/06/22 Ikea 2 Cb*1643 | AVOIR 22/06/22 IKEA            2 CB*1643")
         assert label.get_label() == "ikea"
@@ -182,7 +182,7 @@ class TestSimilarity:
         label1 = Label("Carte 03/03/22 Kiabi Saint Malo Cb*1643 | CARTE 03/03/22 KIABI SAINT MALO  CB*1643")
         label2 = Label("Carte 26/08/25 St Malo Debloque2 Cb*3657 | CARTE 26/08/25 ST MALO DEBLOQUE2 CB*3657")
         assert label1.get_similarity(label2) < 0.6
-    
+
     def test_similarity_with_saint_malo_other(self):
         label1 = Label("Carte 17/07/25 Au Pain St Malo Cb*6863 | CARTE 17/07/25 AU PAIN ST MALO CB*6863")
         label2 = Label("Carte 26/08/25 St Malo Debloque2 Cb*3657 | CARTE 26/08/25 ST MALO DEBLOQUE2 CB*3657")
