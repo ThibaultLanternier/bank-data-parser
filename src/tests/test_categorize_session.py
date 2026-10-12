@@ -11,7 +11,6 @@ from services.group_matcher import ClusterStatus
 from services.groups_file import GroupsFile
 from services.transaction_enhancer import TransactionEnhancer
 
-
 MAIN = Account("00001", "Main")
 SAVINGS = Account("00002", "Savings")
 
