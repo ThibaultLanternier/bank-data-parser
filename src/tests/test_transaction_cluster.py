@@ -16,10 +16,38 @@ def cluster() -> TransactionCluster:
     date = datetime(2024, 1, 1)
 
     transactions = [
-        Transaction(datetime(2024,1,1), date, Label("Ech Pret:80363000600232370909 | ECH PRET:80363000600232370909"), category, account, 150.0),
-        Transaction(datetime(2024,1,2), date, Label("Ech Pret:80363000600232370912 | ECH PRET:80363000600232370912"), category, account, 250.0),
-        Transaction(datetime(2024,1,3), date, Label("Direction Generale Des Finance | PRLV SEPA DIRECTION GENERALE DES FINANCE"), category, account, -100.0),
-        Transaction(datetime(2024,1,4), date, Label("Prlv Sepa Direction Generale Des Finance | PRLV SEPA DIRECTION GENERALE DES FINANCE"), category, account, -100.0),
+        Transaction(
+            datetime(2024, 1, 1),
+            date,
+            Label("Ech Pret:80363000600232370909 | ECH PRET:80363000600232370909"),
+            category,
+            account,
+            150.0,
+        ),
+        Transaction(
+            datetime(2024, 1, 2),
+            date,
+            Label("Ech Pret:80363000600232370912 | ECH PRET:80363000600232370912"),
+            category,
+            account,
+            250.0,
+        ),
+        Transaction(
+            datetime(2024, 1, 3),
+            date,
+            Label("Direction Generale Des Finance | PRLV SEPA DIRECTION GENERALE DES FINANCE"),
+            category,
+            account,
+            -100.0,
+        ),
+        Transaction(
+            datetime(2024, 1, 4),
+            date,
+            Label("Prlv Sepa Direction Generale Des Finance | PRLV SEPA DIRECTION GENERALE DES FINANCE"),
+            category,
+            account,
+            -100.0,
+        ),
     ]
 
     return TransactionCluster(transactions)
