@@ -157,8 +157,9 @@ class QuestionaryUi:
             click.secho(f"Conflict between {', '.join(g.name for g in review.match.groups)}", fg="yellow")
         for t in review.recent_transactions(self.RECENT_TRANSACTIONS):
             group = f"  [{t.group.name}]" if t.group else ""
+            internal = "  [internal]" if t.is_internal else ""
             label = t.label.get_label()[:50]
-            click.echo(f"  {t.dateOperation:%Y-%m-%d}  {label:<50}  {_format_amount(t.amount):>14}{group}")
+            click.echo(f"  {t.dateOperation:%Y-%m-%d}  {label:<50}  {_format_amount(t.amount):>14}{group}{internal}")
         hidden = len(review.cluster.transactions) - self.RECENT_TRANSACTIONS
         if hidden > 0:
             click.echo(f"  ... {hidden} more")

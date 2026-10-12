@@ -9,7 +9,7 @@
 
 ## 2. Internal transactions tagged in the cluster display
 
-- [ ] 2.1 In `QuestionaryUi.show_cluster()` (`src/bilig-cli.py`), append an `[internal]` tag to the lines of internal transactions; verify with a test in `src/tests/test_bilig_cli.py` that calls `show_cluster()` on a cluster holding an internal transaction and checks the tag in the captured output (`capsys`)
+- [x] 2.1 In `QuestionaryUi.show_cluster()` (`src/bilig-cli.py`), append an `[internal]` tag to the lines of internal transactions; verify with a test in `src/tests/test_bilig_cli.py` that calls `show_cluster()` on a cluster holding an internal transaction and checks the tag in the captured output (`capsys`)
 
 ## 3. Documentation and checks
 

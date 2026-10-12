@@ -1,10 +1,18 @@
 import importlib.util
+from datetime import datetime
 from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
 
 import services.file_recorder
+from entities.account import Account
+from entities.category import Category
+from entities.label import Label
+from entities.transaction import Transaction
+from entities.transaction_cluster import TransactionCluster
+from services.categorize_session import ClusterReview, Progress
+from services.group_matcher import ClusterMatch, ClusterStatus
 
 _CLI_PATH = Path(__file__).parent.parent / "bilig-cli.py"
 _spec = importlib.util.spec_from_file_location("bilig_cli", _CLI_PATH)
@@ -159,3 +167,24 @@ class TestReportCommand:
             "    Number of transactions : 3\n"
             "    Bank accounts : export, savings\n"
         )
+
+
+class TestQuestionaryUi:
+    @staticmethod
+    def _transaction(amount: float, day: int, is_internal: bool) -> Transaction:
+        date = datetime(2024, 1, day)
+        t = Transaction(date, date, Label("VIR LIVRET A | VIR LIVRET A"), Category(""), Account("1", "Main"), amount)
+        t.is_internal = is_internal
+        return t
+
+    def test_show_cluster_tags_internal_transactions(self, capsys):
+        cluster = TransactionCluster([self._transaction(-500.0, 5, True), self._transaction(-10.0, 20, False)])
+        review = ClusterReview("cluster_0", cluster, ClusterMatch(ClusterStatus.UNGROUPED))
+
+        bilig_cli.QuestionaryUi().show_cluster(review, Progress(0, 1, 0, 1))
+
+        lines = capsys.readouterr().out.splitlines()
+        [internal] = [line for line in lines if "2024-01-05" in line]
+        [external] = [line for line in lines if "2024-01-20" in line]
+        assert internal.endswith("[internal]")
+        assert "[internal]" not in external
