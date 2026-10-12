@@ -36,4 +36,4 @@
 
 ## 7. Integration check
 
-- [ ] 7.1 Run a real session: categorize a few clusters, then run `extract` and verify the CSV `group` / `group_source` columns match the session, and that the full `poetry run pytest` suite is green
+- [x] 7.1 Run a real session: categorize a few clusters, then run `extract` and verify the CSV `group` / `group_source` columns match the session, and that the full `poetry run pytest` suite is green
