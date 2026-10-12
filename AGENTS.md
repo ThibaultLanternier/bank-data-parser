@@ -4,16 +4,17 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 
 ## Run commands
 
-- Extract transactions: `python src/bilig-cli.py extract [data/boursobank] [--file-type ofx|qif|csv]` (default `ofx`)
+- Extract transactions: `python src/bilig-cli.py extract [data/boursobank] [--file-type ofx|qif|csv] [--groups data/groups.yaml]` (default `ofx`)
 - Monthly report (first and last date, income, expenses, transfers between accounts, transactions count, accounts): `python src/bilig-cli.py report [data/boursobank] [--file-type ofx|qif|csv]` (default `ofx`)
+- Assign groups interactively: `python src/bilig-cli.py categorize [data/boursobank] [--file-type ofx|qif|csv] [--groups data/groups.yaml]` reviews the clusters with ungrouped transactions (largest total amount first), asks a pattern (pre-filled with the cluster label) and a group (autocomplete, new name creates it); each answer is saved immediately, skip / undo / quit (or Ctrl+C) available
 - Run tests: `pytest`
 - Install dependencies: `poetry install`
 
 ## Project structure
 
 - `src/bilig-cli.py` — CLI entry point (uses click)
-- `src/entities/` — data classes: `transaction`, `Account`, `Category`, `Label`, `SourceType`
-- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`
+- `src/entities/` — data classes: `transaction`, `Account`, `Category`, `Group`, `Label`, `SourceType`
+- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`, `GroupsFile`, `GroupMatcher`, `CategorizeSession`
 - `src/output/` — generated CSV files (gitignored)
 
 ## CSV format
@@ -44,6 +45,24 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - Only the first value of a field is kept, split lines (`S`, `E`, `$`) are ignored
 - No value date in QIF: value date is the transaction date
 - Account comes from the `!Account` header `N` field, otherwise the file name (without extension)
+
+## Groups
+
+- User groups (`SALARY`, `SCHOOL`...) live in `data/groups.yaml` (gitignored, `--groups` to use another file), unrelated to the bank `Category`
+- YAML mapping of group name to a list of label patterns:
+
+  ```yaml
+  # first matching group wins: put specific patterns first
+  SUBSCRIPTIONS:
+    - amazon prime
+  SHOPPING:
+    - amazon
+  ```
+
+- A pattern matches when it is a substring of `Label.get_normalized_label()` (case and accent insensitive)
+- Matching is per label cluster: a direct match always wins; transactions without direct match inherit the group only when all direct matches of the cluster agree, otherwise the cluster is a conflict and nothing is inherited
+- Output columns `group` and `group_source` (`direct`, `cluster` or empty)
+- Missing file means no group; the file is written in round-trip mode (comments and order kept)
 
 ## Conventions
 

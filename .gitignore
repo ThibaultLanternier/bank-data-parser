@@ -46,3 +46,5 @@ htmlcov/
 Thumbs.db
 
 *.log
+# User groups (personal merchant names)
+data/groups.yaml

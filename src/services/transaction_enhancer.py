@@ -8,15 +8,20 @@ from rapidfuzz import fuzz
 from sklearn.cluster import DBSCAN
 
 from entities import transaction_cluster
+from entities.group import Group
 from entities.transaction import Transaction
 from entities.transaction_cluster import TransactionCluster
+from services.group_matcher import ClusterMatch, GroupMatcher
 
 logger = logging.getLogger(__name__)
 
 
 class TransactionEnhancer:
-    def __init__(self, transactions: list[Transaction]):
+    def __init__(self, transactions: list[Transaction], groups: list[Group] | None = None):
         self._transactions = transactions
+        self._groups = groups or []
+        self.clusters: dict[str, TransactionCluster] = {}
+        self.cluster_matches: dict[str, ClusterMatch] = {}
         self._by_id: dict[str, Transaction] = {t.id: t for t in transactions}
         self._by_group: dict[str, list[Transaction]] = defaultdict(list)
         for t in transactions:
@@ -60,7 +65,21 @@ class TransactionEnhancer:
                 self.by_id[t.id].periodicity = periodicity
                 self.by_id[t.id].periodicity_confidence = periodicity_confidence
 
+        self.clusters = transaction_clusters
+        self.assign_groups(self._groups)
+
         return list(self._by_id.values())
+
+    def assign_groups(self, groups: list[Group]) -> dict[str, ClusterMatch]:
+        """Assign the groups to the transactions of the clusters computed by get_enhanced_list()."""
+        self._groups = groups
+        self.cluster_matches = GroupMatcher(groups).assign(self.clusters)
+        for cluster in self.clusters.values():
+            for t in cluster.transactions:
+                self._by_id[t.id].group = t.group
+                self._by_id[t.id].group_source = t.group_source
+        logger.info("Assigned %d groups", len(groups))
+        return self.cluster_matches
 
     def _find_offsetting_pairs(self) -> list[tuple[Transaction, Transaction]]:
         pairs = []
