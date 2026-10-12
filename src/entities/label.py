@@ -1,9 +1,9 @@
-from math import e
 import re
-from enum import Enum
 import unicodedata
+from enum import Enum
 
 from rapidfuzz import fuzz
+
 
 class TransactionType(Enum):
     CARD = "CARD"
@@ -64,13 +64,13 @@ class Label:
             return parts[part].strip()
         else:
             return ""
-    
+
     def _remove_date(self, label: str) -> str:
         return re.sub(r"\b\d{2}/\d{2}/\d{2}\b", "", label)
-    
+
     def remove_card_number(self, label: str) -> str:
         return re.sub(r"cb\*\d+", "", label)
-    
+
     def remove_keywords(self, label: str) -> str:
         keywords = ["CARTE", "AVOIR", "VIR", "SEPA", "INST", "PRLV", "REJ"]
 
@@ -83,7 +83,7 @@ class Label:
                 elements_to_keep.append(element)
 
         return " ".join(elements_to_keep)
-    
+
     def remove_numbers(self, label: str) -> str:
         label_elements = label.split()
 
@@ -92,7 +92,7 @@ class Label:
         for element in label_elements:
             if not re.match(r"^\d+$", element):
                 elements_to_keep.append(element)
-        
+
         return " ".join(elements_to_keep)
 
     def get_label(self) -> str:
@@ -103,7 +103,7 @@ class Label:
         clean_label = self.remove_numbers(clean_label)
 
         return clean_label.strip()
-    
+
     def get_normalized_label(self) -> str:
         s = self.get_label()
         s = unicodedata.normalize('NFD', s)
@@ -135,7 +135,7 @@ class Label:
                 return transaction_type
 
         return TransactionType.UNKNOWN
-    
+
     def get_similarity(self, other: 'Label') -> float:
         similarity = fuzz.token_sort_ratio(self.get_normalized_label(), other.get_normalized_label()) / 100.0
         return similarity
