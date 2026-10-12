@@ -14,8 +14,8 @@
 ## 3. Documentation and checks
 
 - [x] 3.1 Update the `categorize` line of `AGENTS.md` to say that internal transactions (transfers between accounts) are not asked about but are shown tagged `[internal]` in the presented clusters; verify by reading the updated line
-- [ ] 3.2 Run the full test suite with `poetry run pytest` and verify it is all green
-- [ ] 3.3 Run `poetry run python src/bilig-cli.py categorize` on real data and verify that clusters made only of transfers between own accounts are not presented
+- [x] 3.2 Run the full test suite with `poetry run pytest` and verify it is all green
+- [x] 3.3 Run `poetry run python src/bilig-cli.py categorize` on real data and verify that clusters made only of transfers between own accounts are not presented
 
 ## Workflow follow-up
 
