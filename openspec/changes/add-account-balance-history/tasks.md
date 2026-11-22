@@ -27,8 +27,8 @@
 
 ## 6. Integration check
 
-- [ ] 6.1 Read `data/boursobank` CSV files with `CsvBankDataReader`, build the day records and a `BankBalance` from a one-off `poetry run python` snippet (not committed), and verify it reports exactly two gaps on account …9727 (2023-01-02, +3.99, and 2026-08-03) and none elsewhere
-- [ ] 6.2 Run `poetry run pytest` and `make lint` and verify both pass
+- [x] 6.1 Read `data/boursobank` CSV files with `CsvBankDataReader`, build the day records and a `BankBalance` from a one-off `poetry run python` snippet (not committed), and verify it reports exactly two gaps on account …9727 (2023-01-02, +3.99, and 2026-08-03) and none elsewhere
+- [x] 6.2 Run `poetry run pytest` and `make lint` and verify both pass
 
 ## Workflow follow-up
 

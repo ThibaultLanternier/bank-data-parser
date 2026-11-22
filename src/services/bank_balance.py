@@ -96,7 +96,9 @@ class BankBalance:
                 if key not in balances:
                     balances[key] = balance
                 elif balances[key] != balance:
-                    logger.warning("Conflicting balances for %s on %s, keeping %.2f", key[0], key[1].date(), balances[key])
+                    logger.warning(
+                        "Conflicting balances for %s on %s, keeping %.2f", key[0], key[1].date(), balances[key]
+                    )
         return balances
 
 

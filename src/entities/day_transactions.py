@@ -25,4 +25,4 @@ class DayTransactions:
         for t in transactions:
             day = t.dateOperation.replace(hour=0, minute=0, second=0, microsecond=0)
             by_key.setdefault((t.account.account_number, day, t.source_file), []).append(t)
-        return [DayTransactions(account, day, day_transactions) for (account, day, _), day_transactions in by_key.items()]
+        return [DayTransactions(account, day, records) for (account, day, _), records in by_key.items()]
