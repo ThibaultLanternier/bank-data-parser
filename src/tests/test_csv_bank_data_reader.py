@@ -8,15 +8,15 @@ from services.csv_bank_data_reader import CsvBankDataReader
 
 OLD_FORMAT = (
     "dateOp;dateVal;label;category;categoryParent;supplierFound;amount;comment;accountNum;accountLabel;accountbalance\n"
-    '2026-03-31;2026-03-31;"M | CARTE 30/03/26 M H CB*5252";"Restaurants, bars, discothèques…";"Loisirs et sorties";"maison hector";-7,90;;00040811579;"BOURSORAMA ESSENTIEL - Clément";258.29\n'
-    '2026-03-30;2026-03-30;"Boulangerie Rt | CARTE 27/03/26 BOULANGERIE RT CB*5252";Alimentation;"Vie quotidienne";"boulangerie rt";-1 104,95;;00040811579;"BOURSORAMA ESSENTIEL - Clément";266.19\n'
+    '2026-03-31;2026-03-31;"M | CARTE 30/03/26 M H CB*5252";"Restaurants, bars, discothèques…";"Loisirs et sorties";"maison hector";-7,90;;00040811579;"BOURSORAMA ESSENTIEL - Clément";258.29\n'  # noqa: E501
+    '2026-03-30;2026-03-30;"Boulangerie Rt | CARTE 27/03/26 BOULANGERIE RT CB*5252";Alimentation;"Vie quotidienne";"boulangerie rt";-1 104,95;;00040811579;"BOURSORAMA ESSENTIEL - Clément";266.19\n'  # noqa: E501
 )
 
 NEW_FORMAT = (
-    '"Date Opération";"Date Valeur";Libellé;"Libellé Suggéré";Catégorie;"Catégorie Parente";Solde;Commentaire;"Numéro Compte";"Libellé Compte";Solde;Pointage\n'
-    '2026-10-02;2026-10-01;"CARTE 01/10/26 ZEPHYR SURF CB*3657";"Zephyr Surf";"Restaurants, bars, discothèques…";"Loisirs et sorties";-8,00;;00040079727;"BoursoBank (joint)";13853.59;Non\n'
-    '2026-10-02;2026-10-02;"CARTE 01/10/26 MIGNON CAFE CB*3657";"Mignon Café";"Restaurants, bars, discothèques…";"Loisirs et sorties";-1 126,00;;00040079727;"BoursoBank (joint)";13853.59;Non\n'
-    '2026-10-02;2026-10-02;"VIR SEPA SOMEONE";"";"Non catégorisé";"Non catégorisé";2,70;;00040079727;"BoursoBank (joint)";13853.59;Non\n'
+    '"Date Opération";"Date Valeur";Libellé;"Libellé Suggéré";Catégorie;"Catégorie Parente";Solde;Commentaire;"Numéro Compte";"Libellé Compte";Solde;Pointage\n'  # noqa: E501
+    '2026-10-02;2026-10-01;"CARTE 01/10/26 ZEPHYR SURF CB*3657";"Zephyr Surf";"Restaurants, bars, discothèques…";"Loisirs et sorties";-8,00;;00040079727;"BoursoBank (joint)";13853.59;Non\n'  # noqa: E501
+    '2026-10-02;2026-10-02;"CARTE 01/10/26 MIGNON CAFE CB*3657";"Mignon Café";"Restaurants, bars, discothèques…";"Loisirs et sorties";-1 126,00;;00040079727;"BoursoBank (joint)";13853.59;Non\n'  # noqa: E501
+    '2026-10-02;2026-10-02;"VIR SEPA SOMEONE";"";"Non catégorisé";"Non catégorisé";2,70;;00040079727;"BoursoBank (joint)";13853.59;Non\n'  # noqa: E501
 )
 
 

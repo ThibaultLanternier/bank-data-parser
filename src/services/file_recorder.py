@@ -59,11 +59,13 @@ class FileRecorder:
                     "year": t.dateOperation.year,
                     "month": t.dateOperation.month,
                     "periodicity": t.periodicity if t.periodicity is not None else "",
-                    "periodicity_confidence": f"{t.periodicity_confidence:.2f}".replace(".", ",") if t.periodicity_confidence is not None else "",
+                    "periodicity_confidence": (
+                        f"{t.periodicity_confidence:.2f}".replace(".", ",")
+                        if t.periodicity_confidence is not None
+                        else ""
+                    ),
                     "cluster_id": t.cluster_id,
                     "grouped_label": t.grouped_label,
-                "group": t.group.name if t.group else None,
-                "group_source": t.group_source.value if t.group_source else None,
                     "group": t.group.name if t.group else "",
                     "group_source": t.group_source.value if t.group_source else "",
                     "label": t.label.get_label(),

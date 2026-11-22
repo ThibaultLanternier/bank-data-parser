@@ -83,7 +83,8 @@ class TestAssignGroups:
         }
 
     def test_no_groups_leaves_transactions_without_group(self):
-        enhanced = TransactionEnhancer([_transaction("2024-01-05", -80.0, label="Edf Particuliers")]).get_enhanced_list()
+        transactions = [_transaction("2024-01-05", -80.0, label="Edf Particuliers")]
+        enhanced = TransactionEnhancer(transactions).get_enhanced_list()
 
         assert _by_label(enhanced) == {"edf particuliers": (None, None)}
 

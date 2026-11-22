@@ -4,11 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 from entities.account import Account
-from services.bank_data_reader import BankDataReader
 from entities.category import Category
 from entities.label import Label
 from entities.source_type import SourceType
 from entities.transaction import Transaction
+from services.bank_data_reader import BankDataReader
 
 logger = logging.getLogger(__name__)
 

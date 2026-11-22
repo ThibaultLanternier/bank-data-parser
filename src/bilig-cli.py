@@ -10,10 +10,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from entities.group import Group
 from entities.transaction import Transaction
 from logging_config import setup_logging
+from services.categorize_session import Action, CategorizeSession, ClusterReview, PatternPreview, Progress
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
 from services.file_recorder import FileRecorder
-from services.categorize_session import Action, CategorizeSession, ClusterReview, PatternPreview, Progress
 from services.groups_file import GroupsFile
 from services.ofx_bank_data_reader import OfxBankDataReader
 from services.qif_bank_data_reader import QifBankDataReader
