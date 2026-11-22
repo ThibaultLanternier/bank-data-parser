@@ -12,6 +12,7 @@ Boursobank CSV exports have an account balance on every row, but the reader drop
   - deduplicates them per account and day: when several files have the same day, the version with more transactions wins;
   - resolves each day's end balance from the balances read for that value date, otherwise infers it from the previous day;
   - orders the days of each account and reports every gap, meaning a day whose start balance differs from the previous day's end balance, with the missing amount.
+- A new `balance` CLI command builds the balance history from the CSV files of a folder, prints per account the days covered, the conflicts and the gaps, and writes the history as a CSV file (one row per account and day) so it can be analyzed and debugged in a spreadsheet.
 - OFX and QIF files have no balance per transaction and are not used for the balance history.
 
 ## Capabilities
@@ -25,5 +26,5 @@ Boursobank CSV exports have an account balance on every row, but the reader drop
 
 - `src/services/csv_bank_data_reader.py`: reads the balance column instead of dropping it.
 - `src/entities/transaction.py`: gets an optional balance (`None` for OFX and QIF).
-- New entity for the day record and new service for the balance history in `src/entities/` and `src/services/`, with unit tests.
-- No change to existing outputs (`extract`, `report`, `categorize`). A CLI command to show the history or the gaps is out of scope here.
+- New entity for the day record, new service for the balance history and new CSV writer for it in `src/entities/` and `src/services/`, with unit tests.
+- `src/bilig-cli.py`: new `balance` command. Existing commands (`extract`, `report`, `categorize`) are unchanged.

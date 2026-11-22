@@ -91,3 +91,29 @@ The balance history SHALL order the days of each account by date and report a ga
 #### Scenario: Inferred day
 - **WHEN** a day's end balance is inferred
 - **THEN** no gap is reported for that day, and the next day is compared with the inferred end balance
+
+### Requirement: Balance command
+The CLI SHALL provide a `balance` command taking an input path (default `data/boursobank`). It SHALL read the CSV files of that path only, build the balance history, print for each account the first and last day, the number of inferred days and of days without balance, then each conflict and each gap with its missing amount, and write the history as a CSV file. It SHALL fail when no CSV transaction is found.
+
+#### Scenario: History with a gap
+- **WHEN** the user runs `bilig balance data/boursobank` and the CSV files miss a 3.99 transaction between 2022-12-30 and 2023-01-02
+- **THEN** the gap between 2022-12-30 and 2023-01-02 is printed with 3,99 € missing, and the path of the written CSV file is printed
+
+#### Scenario: Only CSV files are read
+- **WHEN** the input path holds OFX and QIF files but no CSV file
+- **THEN** the command fails saying no transactions were found in CSV files
+
+### Requirement: Balance history CSV export
+The balance history SHALL be written as a semicolon-delimited UTF-8 CSV file with one row per kept day, ordered by account then date, with the columns `account_number`, `account_label`, `date`, `start_balance`, `total`, `end_balance`, `transaction_count`, `is_inferred`, `gap`, `conflict` and `source_file`. Amounts SHALL use a comma as decimal separator and unknown balances SHALL be empty.
+
+#### Scenario: Day with a gap
+- **WHEN** 2023-01-02 starts at 10109.10 while 2022-12-30 ended at 10105.11
+- **THEN** the 2023-01-02 row has `start_balance` `10109,10` and `gap` `3,99`, and the 2022-12-30 row has an empty `gap`
+
+#### Scenario: Inferred day
+- **WHEN** a day's end balance is inferred
+- **THEN** its row has `INFERRED` in `is_inferred`
+
+#### Scenario: Conflicting day
+- **WHEN** two files have a different version of the same day with as many transactions
+- **THEN** the kept day's row has `CONFLICT` in `conflict` and the `source_file` of the version kept

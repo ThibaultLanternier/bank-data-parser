@@ -30,7 +30,7 @@ The design rests on findings from the current exports (12 CSV files, 10,382 rows
 
 **Non-Goals:**
 - Reconciling OFX or QIF data: they carry no balance per transaction. OFX `LEDGERBAL` (one statement balance) is left for later.
-- A CLI command, report or chart. This change provides the model the follow-up builds on.
+- A chart or a monthly balance report. The CSV export is the only output: it is meant for analysis and debugging, and charts can be built from it.
 - Fixing gaps or guessing which transaction is missing.
 
 ## Decisions
@@ -65,13 +65,19 @@ Sums and balances are rounded to 2 decimals before comparing, so float noise nev
 ### Built from the reader output, not the enhanced list
 `BankBalance` takes transactions straight from `CsvBankDataReader`. `TransactionEnhancer`'s id deduplication would merge identical rows of a day, break the sums and create false gaps.
 
+### `balance` command reads CSV files only
+`bilig balance [INPUT_PATH]` takes the same default folder as the other commands, but has no `--file-type` option: only CSV exports carry a balance, so another type could never give a history. It reuses `read_transactions()` and fails the same way when no CSV transaction is found. It prints one line per account (days covered, inferred days, days without balance), then each conflict and each gap with its missing amount, then the totals.
+- *Alternative:* a `--file-type` option defaulting to `csv`, like the other commands. Rejected: OFX and QIF would always give an empty history.
+
+### `BankBalanceToCSV`, a separate writer
+The history is written by `BankBalanceToCSV`, not by `FileRecorder`, whose rows are transactions with a fixed set of columns. It follows the same conventions so both outputs open the same way: `;` delimiter, UTF-8-sig, comma decimal, `src/output/` (read from `file_recorder.OUTPUT_DIR` at write time so tests can redirect it) and a timestamped name (`balance_<YYYYmmdd_HHMMSS>.csv`).
+
+One row per kept day, ordered by account then date: `account_number`, `account_label`, `date`, `start_balance`, `total`, `end_balance`, `transaction_count`, `is_inferred`, `gap`, `conflict`, `source_file`. Unknown balances are empty. A gap is written on the day that starts at the unexpected balance, as its missing amount. `is_inferred` and `conflict` hold `INFERRED` / `CONFLICT` or nothing, like `is_internal` in the transactions output, so problem rows can be filtered directly.
+- *Alternative:* one row per transaction with its day's balances. Rejected: the history is about days, and a per-day row makes gaps and inferred days visible at a glance.
+
 ## Risks / Trade-offs
 
 - [A newer export has fewer rows for a day, for example a cancelled pending card payment] → the stale version wins. The balance chain shows it as a gap next to the day, which makes the problem visible.
 - [Two transactions of an account share a value date but disagree on the balance] → never seen in the current data. Keep the first balance and log a warning, rather than adding a reported type nobody needs yet.
 - [The first day of an account has no previous day] → its start balance is computed and no gap can be reported before it.
 - [Boursobank changes the meaning of the balance column] → the chain check would show many gaps at once, so a format change can't go unnoticed.
-
-## Open Questions
-
-- How the history and gaps are shown (CLI command, CSV output, chart) is left to a follow-up change. It does not affect this model.
