@@ -48,9 +48,16 @@ class BankBalance:
     def _resolve_balances(self) -> None:
         balances = self._balances_by_value_date()
         for account, days in self.get_days().items():
+            previous_end: float | None = None
             for day in days:
                 day.end_balance = balances.get((account, day.start_date))
+                day.is_inferred = False
+                if day.end_balance is None and previous_end is not None:
+                    # No transaction gives this day's balance: carry the previous one over
+                    day.end_balance = round(previous_end + day.total, 2)
+                    day.is_inferred = True
                 day.start_balance = None if day.end_balance is None else round(day.end_balance - day.total, 2)
+                previous_end = day.end_balance
 
     def _balances_by_value_date(self) -> dict[tuple[str, datetime], float]:
         # The balance of a transaction is the account balance at the end of its value date,

@@ -117,7 +117,10 @@ class TestBalances:
 
         days = BankBalance(_days(transactions)).get_days()["00001"]
 
-        assert [(d.start_date.day, d.end_balance) for d in days] == [(4, 16777.64), (7, None)]
+        assert [(d.start_date.day, d.end_balance, d.is_inferred) for d in days] == [
+            (4, 16777.64, False),
+            (7, 16737.64, True),
+        ]
 
     def test_discarded_version_gives_no_balance(self):
         partial = _days([_transaction(-10.0, source_file="a.csv", balance=999.0)])
@@ -126,3 +129,44 @@ class TestBalances:
         [result] = BankBalance(partial + full).get_days()["00001"]
 
         assert result.end_balance is None
+
+
+class TestInferredBalances:
+    def test_day_without_balance_is_inferred_from_previous_day(self):
+        transactions = [
+            _transaction(-10.0, date="2025-07-11", balance=1000.0),
+            _transaction(-30.0, date="2025-07-14", value_date="2025-07-11", balance=1000.0),
+            _transaction(-20.0, date="2025-07-14", value_date="2025-07-12", balance=1000.0),
+        ]
+
+        days = BankBalance(_days(transactions)).get_days()["00001"]
+
+        assert days[1].end_balance == 950.0
+        assert days[1].start_balance == 1000.0
+        assert days[1].is_inferred
+
+    def test_next_day_balance_read_again_after_inferred_day(self):
+        transactions = [
+            _transaction(-10.0, date="2025-07-11", balance=1000.0),
+            _transaction(-50.0, date="2025-07-14", value_date="2025-07-11", balance=1000.0),
+            _transaction(-5.0, date="2025-07-15", balance=945.0),
+        ]
+
+        days = BankBalance(_days(transactions)).get_days()["00001"]
+
+        assert [(d.end_balance, d.start_balance, d.is_inferred) for d in days] == [
+            (1000.0, 1010.0, False),
+            (950.0, 1000.0, True),
+            (945.0, 950.0, False),
+        ]
+
+    def test_first_day_without_balance_stays_unknown(self):
+        transactions = [
+            _transaction(-10.0, date="2025-07-14", value_date="2025-07-11", balance=1000.0),
+            _transaction(-5.0, date="2025-07-15", balance=985.0),
+        ]
+
+        days = BankBalance(_days(transactions)).get_days()["00001"]
+
+        assert (days[0].end_balance, days[0].start_balance, days[0].is_inferred) == (None, None, False)
+        assert (days[1].end_balance, days[1].start_balance) == (985.0, 990.0)
