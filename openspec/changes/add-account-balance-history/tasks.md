@@ -2,7 +2,7 @@
 
 ## 1. Balance on transactions
 
-- [ ] 1.1 Add an optional `balance: float | None = None` to `Transaction` (`src/entities/transaction.py`), leaving OFX and QIF readers unchanged so they give `None`; verify the existing OFX and QIF reader tests still pass and a new assertion checks `balance is None` for an OFX transaction
+- [x] 1.1 Add an optional `balance: float | None = None` to `Transaction` (`src/entities/transaction.py`), leaving OFX and QIF readers unchanged so they give `None`; verify the existing OFX and QIF reader tests still pass and a new assertion checks `balance is None` for an OFX transaction
 - [ ] 1.2 Parse the `accountbalance` key in `CsvBankDataReader._parse_row` with `_parse_amount` (comma or dot decimal, regular or non-breaking spaces), giving `None` for an empty value; verify with tests in `src/tests/test_csv_bank_data_reader.py` covering the old format (`258.29`), the new format (second `Solde`, `1 234,56`) and an empty balance
 - [ ] 1.3 Document in the CSV format section of `AGENTS.md` that the balance column is kept as the account balance at the end of the row's value date; verify the section matches the reader behavior
 
