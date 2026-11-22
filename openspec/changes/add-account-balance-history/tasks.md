@@ -8,7 +8,7 @@
 
 ## 2. Day records
 
-- [ ] 2.1 Create `DayTransactions` in `src/entities/day_transactions.py` holding `account_number`, `start_date` (operation date at 00:00), `transactions`, `start_balance` / `end_balance` (`float | None`, default `None`), `is_inferred` (default `False`) and a `total` (sum rounded to the cent); verify with unit tests in `src/tests/test_day_transactions.py`
+- [x] 2.1 Create `DayTransactions` in `src/entities/day_transactions.py` holding `account_number`, `start_date` (operation date at 00:00), `transactions`, `start_balance` / `end_balance` (`float | None`, default `None`), `is_inferred` (default `False`) and a `total` (sum rounded to the cent); verify with unit tests in `src/tests/test_day_transactions.py`
 - [ ] 2.2 Add a builder function that groups transactions into `DayTransactions` by account number, operation date and `source_file`, keeping the read order; verify with tests for same-day transactions with different value dates, the same day in two files, and two accounts on the same day
 
 ## 3. Balance history: deduplication
