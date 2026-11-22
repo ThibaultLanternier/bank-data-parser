@@ -77,6 +77,7 @@ class CsvBankDataReader(BankDataReader):
             amount=self._parse_amount(row["amount"]),
             source_type=SourceType.CSV,
             source_file=path.name,
+            balance=self._parse_balance(row.get("accountbalance", "")),
         )
 
     def _get_raw_label(self, row: dict) -> str:
@@ -88,6 +89,12 @@ class CsvBankDataReader(BankDataReader):
         raw_label = row["rawLabel"]
         suggested_label = row.get("suggestedLabel") or raw_label
         return f"{suggested_label} | {raw_label}"
+
+    def _parse_balance(self, value: str) -> float | None:
+        # Account balance at the end of the row's value date, empty when unknown
+        if not value.replace("\xa0", "").strip():
+            return None
+        return self._parse_amount(value)
 
     def _parse_amount(self, value: str) -> float:
         # Handles French number format: "1 100,00" or "-1,95"

@@ -47,6 +47,11 @@ class TestOldFormat:
         t = CsvBankDataReader().read([_write(tmp_path, OLD_FORMAT)])[1]
         assert t.amount == pytest.approx(-1104.95)
 
+    def test_parses_balance(self, tmp_path):
+        transactions = CsvBankDataReader().read([_write(tmp_path, OLD_FORMAT)])
+        assert transactions[0].balance == pytest.approx(258.29)
+        assert transactions[1].balance == pytest.approx(266.19)
+
     def test_sets_source_metadata(self, tmp_path):
         t = CsvBankDataReader().read([_write(tmp_path, OLD_FORMAT)])[0]
 
@@ -77,6 +82,17 @@ class TestNewFormat:
         transactions = CsvBankDataReader().read([_write(tmp_path, NEW_FORMAT)])
         assert transactions[0].amount == pytest.approx(-8.00)
         assert transactions[1].amount == pytest.approx(-1126.00)
+
+    def test_balance_uses_second_solde_column(self, tmp_path):
+        content = NEW_FORMAT.replace("13853.59", "1 234,56", 1)
+        transactions = CsvBankDataReader().read([_write(tmp_path, content)])
+        assert transactions[0].balance == pytest.approx(1234.56)
+        assert transactions[1].balance == pytest.approx(13853.59)
+
+    def test_empty_balance_is_none(self, tmp_path):
+        content = NEW_FORMAT.replace("13853.59", "", 1)
+        t = CsvBankDataReader().read([_write(tmp_path, content)])[0]
+        assert t.balance is None
 
     def test_empty_suggested_label_falls_back_to_raw_label(self, tmp_path):
         t = CsvBankDataReader().read([_write(tmp_path, NEW_FORMAT)])[2]

@@ -21,6 +21,7 @@ class Transaction:
             source_file: str = "",
             bank_transaction_id: str | None = None,
             bank_transaction_type: str | None = None,
+            balance: float | None = None,
         ):
         self.dateOperation = dateOperation
         self.dateValue = dateValue
@@ -32,6 +33,7 @@ class Transaction:
         self.source_file = source_file
         self.bank_transaction_id = bank_transaction_id  # OFX FITID, QIF check/reference number
         self.bank_transaction_type = bank_transaction_type  # OFX TRNTYPE
+        self.balance = balance  # CSV only: account balance at the end of the value date
         self.is_internal = False
         self.is_large = False
         self.grouped_label: str = ""

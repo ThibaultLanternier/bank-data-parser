@@ -7,6 +7,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - Extract transactions: `python src/bilig-cli.py extract [data/boursobank] [--file-type ofx|qif|csv] [--groups data/groups.yaml]` (default `ofx`)
 - Monthly report (first and last date, income, expenses, transfers between accounts, transactions count, accounts): `python src/bilig-cli.py report [data/boursobank] [--file-type ofx|qif|csv]` (default `ofx`)
 - Assign groups interactively: `python src/bilig-cli.py categorize [data/boursobank] [--file-type ofx|qif|csv] [--groups data/groups.yaml]` reviews the clusters with ungrouped transactions (largest total amount first), internal transactions (transfers between accounts) are never asked about but are shown tagged `[internal]` in the reviewed clusters, asks a pattern (pre-filled with the cluster label) and a group (autocomplete, new name creates it); each answer is saved immediately, skip / undo / quit (or Ctrl+C) available
+- Balance history: `python src/bilig-cli.py balance [data/boursobank]` reads the CSV files only (the only ones with a balance), prints per account the days covered, the inferred days, the conflicts and the gaps, and writes one row per account and day to `src/output/balance_<timestamp>.csv` (`BankBalanceToCSV`)
 - Run tests: `pytest`
 - Lint: `make lint` (ruff, configured in `pyproject.toml`, fixes what it can)
 - Install dependencies: `poetry install`
@@ -14,8 +15,8 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 ## Project structure
 
 - `src/bilig-cli.py` — CLI entry point (uses click)
-- `src/entities/` — data classes: `transaction`, `Account`, `Category`, `Group`, `Label`, `SourceType`
-- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`, `GroupsFile`, `GroupMatcher`, `CategorizeSession`
+- `src/entities/` — data classes: `transaction`, `Account`, `Category`, `DayTransactions`, `Group`, `Label`, `SourceType`
+- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`, `GroupsFile`, `GroupMatcher`, `CategorizeSession`, `BankBalance`, `BankBalanceToCSV`
 - `src/output/` — generated CSV files (gitignored)
 
 ## CSV format
@@ -24,6 +25,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - French number format: spaces as thousands separator, comma as decimal
 - Date format: `%Y-%m-%d`
 - Pipe-separated label parts (raw label before `|`, normalized after)
+- Account balance (`accountbalance` in the old format, second `Solde` in the new one) is kept in `transaction.balance`: the account balance at the end of the row's value date (00:00 the next day), `None` when empty. OFX and QIF transactions have no balance
 
 ## OFX format
 
@@ -46,6 +48,14 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - Only the first value of a field is kept, split lines (`S`, `E`, `$`) are ignored
 - No value date in QIF: value date is the transaction date
 - Account comes from the `!Account` header `N` field, otherwise the file name (without extension)
+
+## Balance history
+
+- Built from CSV files only (OFX and QIF have no balance per transaction), from the reader output and not the enhanced list, whose deduplication by id would merge identical rows of a day
+- `DayTransactions.from_transactions()` makes one day record per account, operation date (00:00) and source file
+- `BankBalance` keeps one day record per account and day: the one with the most transactions wins; a tie with different amounts keeps the first one read and is reported in `conflicts`
+- End of day balance: the balance of a kept transaction whose value date is that day (a late-booked transaction gives the balance of an earlier day); otherwise previous end + the day's transactions, flagged `is_inferred`; unknown when there is no previous end. Start balance = end - the day's transactions. Compared to the cent
+- `gaps`: a `BalanceGap` (account, previous day, day, missing amount) when a non-inferred day starts at a different balance than the previous day ended, meaning transactions are missing. Days without transactions are not gaps
 
 ## Groups
 

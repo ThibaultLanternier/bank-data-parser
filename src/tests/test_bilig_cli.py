@@ -169,6 +169,36 @@ class TestReportCommand:
         )
 
 
+BALANCE_CSV = (
+    "dateOp;dateVal;label;category;categoryParent;supplierFound;amount;comment;accountNum;accountLabel;accountbalance\n"
+    "2022-12-30;2022-12-30;A | A;misc;misc;;-77,97;;00001;Main;10105.11\n"
+    "2023-01-02;2023-01-02;B | B;misc;misc;;2950,00;;00001;Main;12190.60\n"
+    "2023-01-02;2023-01-02;C | C;misc;misc;;-868,50;;00001;Main;12190.60\n"
+)
+
+
+class TestBalanceCommand:
+    def test_reports_gaps_and_writes_csv(self, input_dir):
+        (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
+
+        result = CliRunner().invoke(bilig_cli.cli, ["balance", str(input_dir)])
+
+        assert result.exit_code == 0, result.output
+        assert "Read 3 transactions from 1 CSV files." in result.output
+        assert "00001: 2 days from 2022-12-30 to 2023-01-02, 0 inferred, 0 without balance" in result.output
+        assert "Gap: 00001 between 2022-12-30 and 2023-01-02, 3,99 € missing" in result.output
+        assert "1 gaps, 0 conflicts." in result.output
+        [output_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.csv"))
+        assert f"Output written to {output_file}." in result.output
+        assert len(output_file.read_text(encoding="utf-8-sig").splitlines()) == 3
+
+    def test_fails_without_csv_files(self, input_dir):
+        result = CliRunner().invoke(bilig_cli.cli, ["balance", str(input_dir)])
+
+        assert result.exit_code != 0
+        assert "No transactions found in CSV files" in result.output
+
+
 class TestQuestionaryUi:
     @staticmethod
     def _transaction(amount: float, day: int, is_internal: bool) -> Transaction:

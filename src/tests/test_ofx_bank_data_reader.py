@@ -64,6 +64,9 @@ class TestOfxBankDataReader:
         assert t.bank_transaction_id == "fit2"
         assert t.bank_transaction_type == "CREDIT"
 
+    def test_has_no_balance(self, transactions):
+        assert all(t.balance is None for t in transactions)
+
     def test_reads_credit_card_statement(self, transactions):
         t = transactions[2]
         assert t.account.account_number == "4970XXXX6863"
