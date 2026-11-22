@@ -23,7 +23,7 @@
 ## 5. Balance history: gaps
 
 - [x] 5.1 Add `BalanceGap(account_number, previous_date, date, missing_amount)` and report one per consecutive pair whose later day is not inferred and whose `start_balance` differs from the previous `end_balance` to the cent; expose the ordered days per account, the gaps and the conflicts; verify with tests for a continuous history across a weekend, the 3.99 missing transaction, a missing period, and an inferred day that produces no gap
-- [ ] 5.2 Add `DayTransactions` and `BankBalance` to the project structure in `AGENTS.md`, with a short "Balance history" section (operation date for transactions, value date for balances, deduplication rule, gap definition); verify the section matches the specs
+- [x] 5.2 Add `DayTransactions` and `BankBalance` to the project structure in `AGENTS.md`, with a short "Balance history" section (operation date for transactions, value date for balances, deduplication rule, gap definition); verify the section matches the specs
 
 ## 6. Integration check
 
