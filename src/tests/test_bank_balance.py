@@ -78,3 +78,51 @@ class TestDeduplication:
         days = BankBalance([later, earlier]).get_days()
 
         assert [d.start_date for d in days["00001"]] == [datetime(2026, 9, 7), datetime(2026, 9, 8)]
+
+
+def _days(transactions: list[Transaction]) -> list[DayTransactions]:
+    return DayTransactions.from_transactions(transactions)
+
+
+class TestBalances:
+    def test_balance_from_the_same_day(self):
+        day = _days([_transaction(-1000.0, balance=15395.57), _transaction(-200.0, balance=15395.57)])
+
+        [result] = BankBalance(day).get_days()["00001"]
+
+        assert result.end_balance == 15395.57
+        assert result.start_balance == 16595.57
+        assert not result.is_inferred
+
+    def test_late_booked_balance_goes_to_its_value_date(self):
+        transactions = [
+            _transaction(-50.0, date="2026-09-05", balance=16837.64),
+            _transaction(60.0, date="2026-09-07", value_date="2026-09-05", balance=16837.64),
+            _transaction(-80.0, date="2026-09-07", balance=16817.64),
+        ]
+
+        days = BankBalance(_days(transactions)).get_days()["00001"]
+
+        assert [(d.start_date.day, d.end_balance, d.start_balance) for d in days] == [
+            (5, 16837.64, 16887.64),
+            (7, 16817.64, 16837.64),
+        ]
+
+    def test_late_booked_balance_ignored_when_value_date_has_no_transactions(self):
+        transactions = [
+            _transaction(-50.0, date="2026-09-04", balance=16777.64),
+            _transaction(60.0, date="2026-09-07", value_date="2026-09-05", balance=16777.64),
+            _transaction(-100.0, date="2026-09-07", value_date="2026-09-05", balance=16777.64),
+        ]
+
+        days = BankBalance(_days(transactions)).get_days()["00001"]
+
+        assert [(d.start_date.day, d.end_balance) for d in days] == [(4, 16777.64), (7, None)]
+
+    def test_discarded_version_gives_no_balance(self):
+        partial = _days([_transaction(-10.0, source_file="a.csv", balance=999.0)])
+        full = _days([_transaction(-10.0, source_file="b.csv"), _transaction(-20.0, source_file="b.csv")])
+
+        [result] = BankBalance(partial + full).get_days()["00001"]
+
+        assert result.end_balance is None

@@ -17,7 +17,7 @@
 
 ## 4. Balance history: balances
 
-- [ ] 4.1 Build the `(account_number, value date) -> balance` lookup from the kept records only (first balance kept, a warning logged on disagreement), then for each account sorted by date set `end_balance` from the lookup and `start_balance = end_balance - total`; verify with tests for a same-day balance and for a late-booked row whose balance goes to its value date, not its operation date
+- [x] 4.1 Build the `(account_number, value date) -> balance` lookup from the kept records only (first balance kept, a warning logged on disagreement), then for each account sorted by date set `end_balance` from the lookup and `start_balance = end_balance - total`; verify with tests for a same-day balance and for a late-booked row whose balance goes to its value date, not its operation date
 - [ ] 4.2 Infer the end balance from the previous day (`previous end + total`, `is_inferred=True`) when the lookup has no value for the day, and leave both balances unknown when there is no previous end; verify with tests for an inferred day and for a first day without balance
 
 ## 5. Balance history: gaps

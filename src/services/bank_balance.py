@@ -21,6 +21,7 @@ class BankBalance:
     def __init__(self, day_transactions: list[DayTransactions]):
         self.conflicts: list[BalanceConflict] = []
         self._days = self._deduplicate(day_transactions)
+        self._resolve_balances()
 
     def get_days(self) -> dict[str, list[DayTransactions]]:
         """Kept day records per account number, ordered by date."""
@@ -43,6 +44,34 @@ class BankBalance:
                     logger.warning("Conflicting versions of %s on %s", key[0], key[1].date())
                     self.conflicts.append(conflict)
         return kept
+
+    def _resolve_balances(self) -> None:
+        balances = self._balances_by_value_date()
+        for account, days in self.get_days().items():
+            for day in days:
+                day.end_balance = balances.get((account, day.start_date))
+                day.start_balance = None if day.end_balance is None else round(day.end_balance - day.total, 2)
+
+    def _balances_by_value_date(self) -> dict[tuple[str, datetime], float]:
+        # The balance of a transaction is the account balance at the end of its value date,
+        # so a late-booked transaction gives the balance of an earlier day.
+        # Only kept records are used: a discarded version never supplies a balance.
+        balances: dict[tuple[str, datetime], float] = {}
+        for day in self._days.values():
+            for t in day.transactions:
+                if t.balance is None:
+                    continue
+                key = (day.account_number, _midnight(t.dateValue))
+                balance = round(t.balance, 2)
+                if key not in balances:
+                    balances[key] = balance
+                elif balances[key] != balance:
+                    logger.warning("Conflicting balances for %s on %s, keeping %.2f", key[0], key[1].date(), balances[key])
+        return balances
+
+
+def _midnight(date: datetime) -> datetime:
+    return date.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def _amounts(day: DayTransactions) -> list[float]:
