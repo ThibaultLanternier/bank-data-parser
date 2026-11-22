@@ -24,6 +24,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - French number format: spaces as thousands separator, comma as decimal
 - Date format: `%Y-%m-%d`
 - Pipe-separated label parts (raw label before `|`, normalized after)
+- Account balance (`accountbalance` in the old format, second `Solde` in the new one) is kept in `transaction.balance`: the account balance at the end of the row's value date (00:00 the next day), `None` when empty. OFX and QIF transactions have no balance
 
 ## OFX format
 
