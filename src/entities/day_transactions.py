@@ -17,3 +17,12 @@ class DayTransactions:
     @property
     def total(self) -> float:
         return round(sum(t.amount for t in self.transactions), 2)
+
+    @staticmethod
+    def from_transactions(transactions: list[Transaction]) -> list["DayTransactions"]:
+        """One record per account, operation date and source file, in read order."""
+        by_key: dict[tuple[str, datetime, str], list[Transaction]] = {}
+        for t in transactions:
+            day = t.dateOperation.replace(hour=0, minute=0, second=0, microsecond=0)
+            by_key.setdefault((t.account.account_number, day, t.source_file), []).append(t)
+        return [DayTransactions(account, day, day_transactions) for (account, day, _), day_transactions in by_key.items()]
