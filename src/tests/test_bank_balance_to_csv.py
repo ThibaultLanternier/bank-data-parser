@@ -55,7 +55,9 @@ class TestBankBalanceToCSV:
     def test_writes_balances_in_french_format(self, tmp_path, bank_balance):
         rows = _read(BankBalanceToCSV(tmp_path).write_csv(bank_balance, "balance.csv"))
 
-        assert (rows[1]["start_balance"], rows[1]["total"], rows[1]["end_balance"]) == ("10109,10", "2081,50", "12190,60")
+        assert rows[1]["start_balance"] == "10109,10"
+        assert rows[1]["total"] == "2081,50"
+        assert rows[1]["end_balance"] == "12190,60"
         assert rows[1]["transaction_count"] == "2"
         assert rows[1]["account_number"] == "00001"
         assert rows[1]["account_label"] == "Main Account"
