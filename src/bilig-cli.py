@@ -7,9 +7,12 @@ import questionary
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+from entities.day_transactions import DayTransactions
 from entities.group import Group
 from entities.transaction import Transaction
 from logging_config import setup_logging
+from services.bank_balance import BankBalance
+from services.bank_balance_to_csv import BankBalanceToCSV
 from services.categorize_session import Action, CategorizeSession, ClusterReview, PatternPreview, Progress
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
@@ -134,6 +137,35 @@ def report(input_path: str, file_type: str):
             click.echo(f"    Number of transactions : {summary.transaction_count}")
             click.echo(f"    Bank accounts : {', '.join(summary.account_numbers)}")
 
+
+@cli.command()
+@click.argument("input_path", default="data/boursobank", type=click.Path(exists=True))
+def balance(input_path: str):
+    """Build the day by day balance of each account from the CSV files of INPUT_PATH and write it as CSV."""
+    # Only CSV exports carry a balance per transaction
+    transactions = read_transactions(input_path, "csv")
+    day_transactions = DayTransactions.from_transactions(transactions)
+    bank_balance = BankBalance(day_transactions)
+
+    for account, days in bank_balance.get_days().items():
+        inferred = sum(d.is_inferred for d in days)
+        unknown = sum(d.end_balance is None for d in days)
+        click.echo(
+            f"{account}: {len(days)} days from {days[0].start_date:%Y-%m-%d} to {days[-1].start_date:%Y-%m-%d}, "
+            f"{inferred} inferred, {unknown} without balance"
+        )
+    for c in bank_balance.conflicts:
+        click.secho(f"Conflict: {c.account_number} on {c.date:%Y-%m-%d}", fg="yellow")
+    for g in bank_balance.gaps:
+        click.secho(
+            f"Gap: {g.account_number} between {g.previous_date:%Y-%m-%d} and {g.date:%Y-%m-%d}, "
+            f"{_format_amount(g.missing_amount)} missing",
+            fg="red",
+        )
+    click.echo(f"{len(bank_balance.gaps)} gaps, {len(bank_balance.conflicts)} conflicts.")
+
+    csv_path = BankBalanceToCSV().write_csv(bank_balance)
+    click.echo(f"Output written to {csv_path}.")
 
 
 class QuestionaryUi:
