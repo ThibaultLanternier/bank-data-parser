@@ -7,6 +7,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - Extract transactions: `python src/bilig-cli.py extract [data/boursobank] [--file-type ofx|qif|csv] [--groups data/groups.yaml]` (default `ofx`)
 - Monthly report (first and last date, income, expenses, transfers between accounts, transactions count, accounts): `python src/bilig-cli.py report [data/boursobank] [--file-type ofx|qif|csv]` (default `ofx`)
 - Assign groups interactively: `python src/bilig-cli.py categorize [data/boursobank] [--file-type ofx|qif|csv] [--groups data/groups.yaml]` reviews the clusters with ungrouped transactions (largest total amount first), internal transactions (transfers between accounts) are never asked about but are shown tagged `[internal]` in the reviewed clusters, asks a pattern (pre-filled with the cluster label) and a group (autocomplete, new name creates it); each answer is saved immediately, skip / undo / quit (or Ctrl+C) available
+- Balance history: `python src/bilig-cli.py balance [data/boursobank]` reads the CSV files only (the only ones with a balance), prints per account the days covered, the inferred days, the conflicts and the gaps, and writes one row per account and day to `src/output/balance_<timestamp>.csv` (`BankBalanceToCSV`)
 - Run tests: `pytest`
 - Lint: `make lint` (ruff, configured in `pyproject.toml`, fixes what it can)
 - Install dependencies: `poetry install`
@@ -15,7 +16,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 
 - `src/bilig-cli.py` — CLI entry point (uses click)
 - `src/entities/` — data classes: `transaction`, `Account`, `Category`, `DayTransactions`, `Group`, `Label`, `SourceType`
-- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`, `GroupsFile`, `GroupMatcher`, `CategorizeSession`, `BankBalance`
+- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`, `GroupsFile`, `GroupMatcher`, `CategorizeSession`, `BankBalance`, `BankBalanceToCSV`
 - `src/output/` — generated CSV files (gitignored)
 
 ## CSV format
