@@ -15,6 +15,16 @@ class BalanceConflict:
     date: datetime
 
 
+@dataclass(frozen=True)
+class BalanceGap:
+    """The balance moved by more than the transactions between two consecutive days: transactions are missing."""
+
+    account_number: str
+    previous_date: datetime
+    date: datetime
+    missing_amount: float  # start balance of the day minus end balance of the previous day
+
+
 class BankBalance:
     """Day by day balance of each account, built from the day records of all CSV files."""
 
@@ -22,6 +32,7 @@ class BankBalance:
         self.conflicts: list[BalanceConflict] = []
         self._days = self._deduplicate(day_transactions)
         self._resolve_balances()
+        self.gaps = self._find_gaps()
 
     def get_days(self) -> dict[str, list[DayTransactions]]:
         """Kept day records per account number, ordered by date."""
@@ -58,6 +69,18 @@ class BankBalance:
                     day.is_inferred = True
                 day.start_balance = None if day.end_balance is None else round(day.end_balance - day.total, 2)
                 previous_end = day.end_balance
+
+    def _find_gaps(self) -> list[BalanceGap]:
+        gaps = []
+        for account, days in self.get_days().items():
+            for previous, day in zip(days, days[1:]):
+                # An inferred day is built from the previous one and cannot reveal a gap
+                if day.is_inferred or day.start_balance is None or previous.end_balance is None:
+                    continue
+                missing = round(day.start_balance - previous.end_balance, 2)
+                if missing != 0:
+                    gaps.append(BalanceGap(account, previous.start_date, day.start_date, missing))
+        return gaps
 
     def _balances_by_value_date(self) -> dict[tuple[str, datetime], float]:
         # The balance of a transaction is the account balance at the end of its value date,

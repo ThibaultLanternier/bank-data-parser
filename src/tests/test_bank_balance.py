@@ -5,7 +5,7 @@ from entities.category import Category
 from entities.day_transactions import DayTransactions
 from entities.label import Label
 from entities.transaction import Transaction
-from services.bank_balance import BalanceConflict, BankBalance
+from services.bank_balance import BalanceConflict, BalanceGap, BankBalance
 
 ACCOUNT = Account("00001", "Main Account")
 
@@ -170,3 +170,57 @@ class TestInferredBalances:
 
         assert (days[0].end_balance, days[0].start_balance, days[0].is_inferred) == (None, None, False)
         assert (days[1].end_balance, days[1].start_balance) == (985.0, 990.0)
+
+
+class TestGaps:
+    def test_continuous_history_across_a_weekend(self):
+        transactions = [
+            _transaction(-10.0, date="2026-09-04", balance=1000.0),
+            _transaction(-25.0, date="2026-09-07", balance=975.0),
+        ]
+
+        assert BankBalance(_days(transactions)).gaps == []
+
+    def test_missing_transaction(self):
+        transactions = [
+            _transaction(-77.97, date="2022-12-30", balance=10105.11),
+            _transaction(2950.0, date="2023-01-02", balance=12190.6),
+            _transaction(-868.5, date="2023-01-02", balance=12190.6),
+        ]
+
+        gaps = BankBalance(_days(transactions)).gaps
+
+        assert gaps == [BalanceGap("00001", datetime(2022, 12, 30), datetime(2023, 1, 2), 3.99)]
+
+    def test_missing_period(self):
+        transactions = [
+            _transaction(-10.0, date="2026-03-31", balance=5000.0),
+            _transaction(-20.0, date="2026-08-03", balance=14869.44),
+        ]
+
+        gaps = BankBalance(_days(transactions)).gaps
+
+        assert gaps == [BalanceGap("00001", datetime(2026, 3, 31), datetime(2026, 8, 3), 9889.44)]
+
+    def test_inferred_day_is_not_a_gap_and_is_compared_with_the_next_day(self):
+        transactions = [
+            _transaction(-10.0, date="2025-07-11", balance=1000.0),
+            _transaction(-50.0, date="2025-07-14", value_date="2025-07-11", balance=1000.0),
+            _transaction(-5.0, date="2025-07-15", balance=940.0),
+        ]
+
+        gaps = BankBalance(_days(transactions)).gaps
+
+        assert gaps == [BalanceGap("00001", datetime(2025, 7, 14), datetime(2025, 7, 15), -5.0)]
+
+    def test_gaps_are_per_account(self):
+        savings = Account("00002", "Savings Account")
+        other = _transaction(10.0, date="2026-09-05", balance=500.0)
+        other.account = savings
+        transactions = [
+            _transaction(-10.0, date="2026-09-04", balance=1000.0),
+            other,
+            _transaction(-25.0, date="2026-09-07", balance=975.0),
+        ]
+
+        assert BankBalance(_days(transactions)).gaps == []
