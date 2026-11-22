@@ -13,7 +13,7 @@
 
 ## 3. Balance history: deduplication
 
-- [ ] 3.1 Create `BankBalance` in `src/services/bank_balance.py` taking a list of `DayTransactions`, keeping one per `(account_number, start_date)`: most transactions wins, on a tie with different sorted amounts the first one read wins and a conflict `(account_number, start_date)` is recorded; verify with tests for partial re-export, identical days (no conflict) and tie with different content
+- [x] 3.1 Create `BankBalance` in `src/services/bank_balance.py` taking a list of `DayTransactions`, keeping one per `(account_number, start_date)`: most transactions wins, on a tie with different sorted amounts the first one read wins and a conflict `(account_number, start_date)` is recorded; verify with tests for partial re-export, identical days (no conflict) and tie with different content
 
 ## 4. Balance history: balances
 
