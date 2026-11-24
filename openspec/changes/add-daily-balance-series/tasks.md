@@ -25,7 +25,7 @@
 
 - [x] 5.1 Add `BankBalance.get_missing_periods(date_from=None, date_to=None)` returning, per account with at least one, the runs of consecutive daily series days with an unknown end balance as `(first, last)`; verify with tests for a gap, a range beyond the history, two periods, a complete history, an unknown first day and a gap between consecutive days
 - [x] 5.2 Print `Account: <account> missing data between <first> and <last>` for each period in the `balance` command, using `--from` / `--to`; verify with a CLI test, describe it in `AGENTS.md`, and check on `data/boursobank` that account …9727 reports 2022-12-31 to 2023-01-01 and 2026-04-01 to 2026-08-02
-- [ ] 5.3 Run `poetry run pytest` and `make lint` and verify both pass
+- [x] 5.3 Run `poetry run pytest` and `make lint` and verify both pass
 
 ## Workflow follow-up
 
