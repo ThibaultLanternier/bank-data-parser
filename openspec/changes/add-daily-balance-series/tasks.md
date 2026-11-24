@@ -9,7 +9,7 @@
 
 ## 2. CSV export
 
-- [ ] 2.1 Make `BankBalanceToCSV.write_csv` take `date_from` / `date_to`, write `get_daily_series(date_from, date_to)`, take the label from `get_account_label` and leave `source_file` empty on days without transactions; verify with tests in `src/tests/test_bank_balance_to_csv.py` for a filled day (`0,00` total, count 0, balances carried), a day in a gap (empty balances), and the existing gap, inferred and conflict rows unchanged
+- [x] 2.1 Make `BankBalanceToCSV.write_csv` take `date_from` / `date_to`, write `get_daily_series(date_from, date_to)`, take the label from `get_account_label` and leave `source_file` empty on days without transactions; verify with tests in `src/tests/test_bank_balance_to_csv.py` for a filled day (`0,00` total, count 0, balances carried), a day in a gap (empty balances), and the existing gap, inferred and conflict rows unchanged
 
 ## 3. CLI
 

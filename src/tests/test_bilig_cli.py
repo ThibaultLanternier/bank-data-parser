@@ -190,7 +190,8 @@ class TestBalanceCommand:
         assert "1 gaps, 0 conflicts." in result.output
         [output_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.csv"))
         assert f"Output written to {output_file}." in result.output
-        assert len(output_file.read_text(encoding="utf-8-sig").splitlines()) == 3
+        # Header + one row per calendar day from 2022-12-30 to 2023-01-02
+        assert len(output_file.read_text(encoding="utf-8-sig").splitlines()) == 5
 
     def test_fails_without_csv_files(self, input_dir):
         result = CliRunner().invoke(bilig_cli.cli, ["balance", str(input_dir)])
