@@ -224,3 +224,129 @@ class TestGaps:
         ]
 
         assert BankBalance(_days(transactions)).gaps == []
+
+
+def _on_account(transaction: Transaction, account: Account) -> Transaction:
+    transaction.account = account
+    return transaction
+
+
+def _series(transactions: list[Transaction], date_from: str | None = None, date_to: str | None = None):
+    bounds = [datetime.strptime(d, "%Y-%m-%d") if d else None for d in (date_from, date_to)]
+    return BankBalance(_days(transactions)).get_daily_series(*bounds)
+
+
+class TestAccountLabel:
+    def test_label_kept_per_account(self):
+        savings = Account("00002", "Savings Account")
+        transactions = [_transaction(-10.0), _on_account(_transaction(10.0), savings)]
+
+        balance = BankBalance(_days(transactions))
+
+        assert balance.get_account_label("00001") == "Main Account"
+        assert balance.get_account_label("00002") == "Savings Account"
+
+
+class TestDailySeriesRange:
+    def test_weekend_filled_in(self):
+        transactions = [
+            _transaction(-10.0, date="2026-09-04", balance=1000.0),
+            _transaction(-25.0, date="2026-09-07", balance=975.0),
+        ]
+
+        days = _series(transactions)["00001"]
+
+        assert [d.start_date.day for d in days] == [4, 5, 6, 7]
+        assert [len(d.transactions) for d in days] == [1, 0, 0, 1]
+        assert [d.total for d in days] == [-10.0, 0, 0, -25.0]
+
+    def test_days_with_transactions_are_the_kept_records(self):
+        transactions = [_transaction(-10.0, date="2026-09-04"), _transaction(-25.0, date="2026-09-07")]
+        balance = BankBalance(_days(transactions))
+
+        days = balance.get_daily_series()["00001"]
+
+        assert days[0] is balance.get_days()["00001"][0]
+        assert days[3] is balance.get_days()["00001"][1]
+
+    def test_range_given_inside_the_history(self):
+        transactions = [_transaction(-10.0, date="2026-01-05"), _transaction(-25.0, date="2026-06-30")]
+
+        days = _series(transactions, "2026-03-01", "2026-03-31")["00001"]
+
+        assert len(days) == 31
+        assert (days[0].start_date, days[-1].start_date) == (datetime(2026, 3, 1), datetime(2026, 3, 31))
+
+    def test_each_account_its_own_range(self):
+        savings = Account("00002", "Savings Account")
+        transactions = [
+            _transaction(-10.0, date="2025-01-02"),
+            _transaction(-10.0, date="2026-02-12"),
+            _on_account(_transaction(10.0, date="2026-02-10"), savings),
+            _on_account(_transaction(10.0, date="2026-02-12"), savings),
+        ]
+
+        series = _series(transactions)
+
+        assert series["00001"][0].start_date == datetime(2025, 1, 2)
+        assert series["00002"][0].start_date == datetime(2026, 2, 10)
+        assert len(series["00002"]) == 3
+
+
+class TestDailySeriesBalances:
+    def test_no_gap_carries_previous_end_balance(self):
+        transactions = [
+            _transaction(-10.0, date="2026-09-04", balance=1000.0),
+            _transaction(-25.0, date="2026-09-07", balance=975.0),
+        ]
+
+        days = _series(transactions)["00001"]
+
+        assert [(d.start_balance, d.end_balance, d.is_inferred) for d in days[1:3]] == [
+            (1000.0, 1000.0, False),
+            (1000.0, 1000.0, False),
+        ]
+
+    def test_gap_leaves_balances_unknown(self):
+        transactions = [
+            _transaction(-77.97, date="2022-12-30", balance=10105.11),
+            _transaction(2950.0, date="2023-01-02", balance=12190.6),
+            _transaction(-868.5, date="2023-01-02", balance=12190.6),
+        ]
+
+        days = _series(transactions)["00001"]
+
+        assert [(d.start_date.day, d.start_balance, d.end_balance) for d in days[1:3]] == [
+            (31, None, None),
+            (1, None, None),
+        ]
+
+    def test_inferred_next_day_carries_previous_end_balance(self):
+        transactions = [
+            _transaction(-10.0, date="2025-07-11", balance=1000.0),
+            _transaction(-50.0, date="2025-07-14", value_date="2025-07-11", balance=1000.0),
+        ]
+
+        days = _series(transactions)["00001"]
+
+        assert days[-1].is_inferred
+        assert [(d.start_balance, d.end_balance) for d in days[1:3]] == [(1000.0, 1000.0), (1000.0, 1000.0)]
+
+    def test_unknown_previous_end_balance_stays_unknown(self):
+        transactions = [_transaction(-10.0, date="2025-07-11"), _transaction(-5.0, date="2025-07-14")]
+
+        days = _series(transactions)["00001"]
+
+        assert [(d.start_balance, d.end_balance) for d in days[1:3]] == [(None, None), (None, None)]
+
+    def test_outside_the_history_is_unknown(self):
+        transactions = [
+            _transaction(-10.0, date="2026-09-04", balance=1000.0),
+            _transaction(-25.0, date="2026-09-07", balance=975.0),
+        ]
+
+        days = _series(transactions, "2026-09-01", "2026-09-12")["00001"]
+
+        outside = days[:3] + days[-5:]
+        assert len(days) == 12
+        assert all(d.transactions == [] and (d.start_balance, d.end_balance) == (None, None) for d in outside)

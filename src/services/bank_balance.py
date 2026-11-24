@@ -1,6 +1,7 @@
 import logging
+from bisect import bisect_left
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from entities.day_transactions import DayTransactions
 
@@ -31,8 +32,16 @@ class BankBalance:
     def __init__(self, day_transactions: list[DayTransactions]):
         self.conflicts: list[BalanceConflict] = []
         self._days = self._deduplicate(day_transactions)
+        self._labels = {
+            account: day.transactions[0].account.account_label
+            for (account, _), day in self._days.items()
+            if day.transactions
+        }
         self._resolve_balances()
         self.gaps = self._find_gaps()
+
+    def get_account_label(self, account_number: str) -> str:
+        return self._labels.get(account_number, "")
 
     def get_days(self) -> dict[str, list[DayTransactions]]:
         """Kept day records per account number, ordered by date."""
@@ -40,6 +49,37 @@ class BankBalance:
         for day in self._days.values():
             by_account.setdefault(day.account_number, []).append(day)
         return {account: sorted(days, key=lambda d: d.start_date) for account, days in by_account.items()}
+
+    def get_daily_series(
+        self, date_from: datetime | None = None, date_to: datetime | None = None
+    ) -> dict[str, list[DayTransactions]]:
+        """One day per account and calendar day from date_from to date_to (included), ordered by date.
+
+        A missing bound is the account's first or last day with transactions. Days with transactions are
+        the kept records; the other days are empty records carrying the previous end balance when the
+        history is continuous around them, None inside a gap or outside the history.
+        """
+        gap_days = {(g.account_number, g.date) for g in self.gaps}
+        series: dict[str, list[DayTransactions]] = {}
+        for account, days in self.get_days().items():
+            dates = [d.start_date for d in days]
+            first = _midnight(date_from) if date_from else dates[0]
+            last = _midnight(date_to) if date_to else dates[-1]
+            series[account] = []
+            day = first
+            while day <= last:
+                i = bisect_left(dates, day)
+                if i < len(dates) and dates[i] == day:
+                    series[account].append(days[i])
+                else:
+                    # days[i - 1] is the previous day with transactions, days[i] the next one
+                    continuous = 0 < i < len(dates) and (account, dates[i]) not in gap_days
+                    balance = days[i - 1].end_balance if continuous else None
+                    filled = DayTransactions(account, day, [])
+                    filled.start_balance = filled.end_balance = balance
+                    series[account].append(filled)
+                day += timedelta(days=1)
+        return series
 
     def _deduplicate(self, day_transactions: list[DayTransactions]) -> dict[tuple[str, datetime], DayTransactions]:
         kept: dict[tuple[str, datetime], DayTransactions] = {}
