@@ -6,8 +6,11 @@ from entities.transaction import Transaction
 class DayTransactions:
     """Transactions of one account booked on one day (operation date), read from one file."""
 
-    def __init__(self, account_number: str, start_date: datetime, transactions: list[Transaction]):
+    def __init__(
+        self, account_number: str, start_date: datetime, transactions: list[Transaction], account_label: str = ""
+    ):
         self.account_number = account_number
+        self.account_label = account_label
         self.start_date = start_date  # operation date at 00:00
         self.transactions = transactions
         self.start_balance: float | None = None
@@ -25,4 +28,7 @@ class DayTransactions:
         for t in transactions:
             day = t.dateOperation.replace(hour=0, minute=0, second=0, microsecond=0)
             by_key.setdefault((t.account.account_number, day, t.source_file), []).append(t)
-        return [DayTransactions(account, day, records) for (account, day, _), records in by_key.items()]
+        return [
+            DayTransactions(account, day, records, records[0].account.account_label)
+            for (account, day, _), records in by_key.items()
+        ]

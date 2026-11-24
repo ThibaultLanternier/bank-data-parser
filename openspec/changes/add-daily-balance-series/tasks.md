@@ -27,6 +27,10 @@
 - [x] 5.2 Print `Account: <account> missing data between <first> and <last>` for each period in the `balance` command, using `--from` / `--to`; verify with a CLI test, describe it in `AGENTS.md`, and check on `data/boursobank` that account …9727 reports 2022-12-31 to 2023-01-01 and 2026-04-01 to 2026-08-02
 - [x] 5.3 Run `poetry run pytest` and `make lint` and verify both pass
 
+## 6. Account label on day records
+
+- [x] 6.1 Add `account_label` (default empty) to `DayTransactions`, set it in `from_transactions()` and on the filled days of the daily series, and make the CSV writer read it; verify with tests in `src/tests/test_day_transactions.py` and `src/tests/test_bank_balance.py`, `poetry run pytest` and `make lint`
+
 ## Workflow follow-up
 
 - Open the PR against `develop`, with the lint fixes in the last commit.

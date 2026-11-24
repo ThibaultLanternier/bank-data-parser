@@ -269,6 +269,13 @@ class TestDailySeriesRange:
         assert days[0] is balance.get_days()["00001"][0]
         assert days[3] is balance.get_days()["00001"][1]
 
+    def test_days_without_transactions_hold_the_account_label(self):
+        transactions = [_transaction(-10.0, date="2026-09-04"), _transaction(-25.0, date="2026-09-07")]
+
+        days = _series(transactions, "2026-09-01", "2026-09-10")["00001"]
+
+        assert {d.account_label for d in days} == {"Main Account"}
+
     def test_range_given_inside_the_history(self):
         transactions = [_transaction(-10.0, date="2026-01-05"), _transaction(-25.0, date="2026-06-30")]
 

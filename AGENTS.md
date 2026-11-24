@@ -52,7 +52,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 ## Balance history
 
 - Built from CSV files only (OFX and QIF have no balance per transaction), from the reader output and not the enhanced list, whose deduplication by id would merge identical rows of a day
-- `DayTransactions.from_transactions()` makes one day record per account, operation date (00:00) and source file
+- `DayTransactions.from_transactions()` makes one day record per account, operation date (00:00) and source file, holding the account label
 - `BankBalance` keeps one day record per account and day: the one with the most transactions wins; a tie with different amounts keeps the first one read and is reported in `conflicts`
 - End of day balance: the balance of a kept transaction whose value date is that day (a late-booked transaction gives the balance of an earlier day); otherwise previous end + the day's transactions, flagged `is_inferred`; unknown when there is no previous end. Start balance = end - the day's transactions. Compared to the cent
 - `gaps`: a `BalanceGap` (account, previous day, day, missing amount) when a non-inferred day starts at a different balance than the previous day ended, meaning transactions are missing. Days without transactions are not gaps

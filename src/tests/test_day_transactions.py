@@ -36,6 +36,11 @@ class TestDayTransactions:
         assert day.start_date == datetime(2026, 9, 7, 0, 0, 0)
         assert day.transactions == transactions
 
+    def test_account_label_defaults_to_empty(self):
+        day = DayTransactions("00001", datetime(2026, 9, 7), [])
+
+        assert day.account_label == ""
+
     def test_balances_unknown_by_default(self):
         day = DayTransactions("00001", datetime(2026, 9, 7), [_transaction(-10.0)])
 
@@ -84,6 +89,11 @@ class TestFromTransactions:
         days = DayTransactions.from_transactions([main, savings])
 
         assert [(d.account_number, d.transactions) for d in days] == [("00001", [main]), ("00002", [savings])]
+
+    def test_record_holds_the_account_label(self):
+        days = DayTransactions.from_transactions([_transaction(-10.0), _transaction(10.0, account=SAVINGS)])
+
+        assert [d.account_label for d in days] == ["Main Account", "Savings Account"]
 
     def test_one_record_per_day_in_read_order(self):
         later = _transaction(-10.0, date="2026-09-08")

@@ -27,7 +27,7 @@ For a calendar day without a real day: find the previous real day `p` and the ne
 Alternative considered: carrying the previous end balance after the last day, rejected because nothing tells that no transaction happened after the last export.
 
 ### Account label
-`BankBalance` keeps `account_number -> account_label` from the first transaction of the kept days, exposed as `get_account_label(account)`. The CSV writer uses it for every row and writes `source_file` only when the day has transactions.
+`DayTransactions` holds an `account_label` (default empty), set by `from_transactions()` from its first transaction. `BankBalance` keeps `account_number -> account_label` from the kept days, exposed as `get_account_label(account)`, and gives it to the filled days, so every day of the series carries the label. The CSV writer reads `day.account_label` and writes `source_file` only when the day has transactions. Alternative considered: the writer asking `BankBalance` for the label, rejected so that a day is self-describing for any consumer of the series.
 
 ### CSV writer and CLI
 `BankBalanceToCSV.write_csv(bank_balance, filename=None, date_from=None, date_to=None)` writes `get_daily_series(date_from, date_to)`; `gap` and `conflict` lookups are unchanged and naturally empty on filled days. The `balance` command adds `--from` / `--to` as `click.DateTime(formats=["%Y-%m-%d"])`, raises `click.BadParameter` when `--from` is after `--to`, keeps the summary on `get_days()` and passes the bounds to the writer.

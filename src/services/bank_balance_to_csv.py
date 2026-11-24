@@ -54,7 +54,7 @@ class BankBalanceToCSV:
                     key = (account, day.start_date)
                     writer.writerow({
                         "account_number": account,
-                        "account_label": bank_balance.get_account_label(account),
+                        "account_label": day.account_label,
                         "date": day.start_date.strftime("%Y-%m-%d"),
                         "start_balance": _format(day.start_balance),
                         "total": _format(day.total),

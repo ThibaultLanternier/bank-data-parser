@@ -32,11 +32,7 @@ class BankBalance:
     def __init__(self, day_transactions: list[DayTransactions]):
         self.conflicts: list[BalanceConflict] = []
         self._days = self._deduplicate(day_transactions)
-        self._labels = {
-            account: day.transactions[0].account.account_label
-            for (account, _), day in self._days.items()
-            if day.transactions
-        }
+        self._labels = {account: day.account_label for (account, _), day in self._days.items()}
         self._resolve_balances()
         self.gaps = self._find_gaps()
 
@@ -75,7 +71,7 @@ class BankBalance:
                     # days[i - 1] is the previous day with transactions, days[i] the next one
                     continuous = 0 < i < len(dates) and (account, dates[i]) not in gap_days
                     balance = days[i - 1].end_balance if continuous else None
-                    filled = DayTransactions(account, day, [])
+                    filled = DayTransactions(account, day, [], self.get_account_label(account))
                     filled.start_balance = filled.end_balance = balance
                     series[account].append(filled)
                 day += timedelta(days=1)
