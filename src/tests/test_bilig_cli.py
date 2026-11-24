@@ -188,7 +188,7 @@ class TestBalanceCommand:
         assert "00001: 2 days from 2022-12-30 to 2023-01-02, 0 inferred, 0 without balance" in result.output
         assert "Gap: 00001 between 2022-12-30 and 2023-01-02, 3,99 € missing" in result.output
         assert "1 gaps, 0 conflicts." in result.output
-        assert "Account: 00001 missing data between 2022-12-31 and 2023-01-01" in result.output
+        assert "Account: Main (00001) missing data between 2022-12-31 and 2023-01-01" in result.output
         [output_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.csv"))
         assert f"Output written to {output_file}." in result.output
         # Header + one row per calendar day from 2022-12-30 to 2023-01-02
@@ -207,8 +207,8 @@ class TestBalanceCommand:
         [output_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.csv"))
         dates = [line.split(";")[2] for line in output_file.read_text(encoding="utf-8-sig").splitlines()[1:]]
         assert dates == ["2022-12-31", "2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"]
-        assert "Account: 00001 missing data between 2022-12-31 and 2023-01-01" in result.output
-        assert "Account: 00001 missing data between 2023-01-03 and 2023-01-05" in result.output
+        assert "Account: Main (00001) missing data between 2022-12-31 and 2023-01-01" in result.output
+        assert "Account: Main (00001) missing data between 2023-01-03 and 2023-01-05" in result.output
 
     def test_fails_when_from_is_after_to(self, input_dir):
         (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")

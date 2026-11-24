@@ -31,6 +31,8 @@
 
 - [x] 6.1 Add `account_label` (default empty) to `DayTransactions`, set it in `from_transactions()` and on the filled days of the daily series, and make the CSV writer read it; verify with tests in `src/tests/test_day_transactions.py` and `src/tests/test_bank_balance.py`, `poetry run pytest` and `make lint`
 
+- [x] 6.2 Print the account label before the account number in the missing data lines of the `balance` command (`Account: <label> (<account>) missing data between ...`, number alone without label); verify with the CLI tests and `poetry run pytest`
+
 ## Workflow follow-up
 
 - Open the PR against `develop`, with the lint fixes in the last commit.

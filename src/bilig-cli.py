@@ -181,8 +181,11 @@ def balance(input_path: str, date_from: datetime | None, date_to: datetime | Non
     click.echo(f"{len(bank_balance.gaps)} gaps, {len(bank_balance.conflicts)} conflicts.")
     # Periods to export again so that the daily series is complete for every account
     for account, periods in bank_balance.get_missing_periods(date_from, date_to).items():
+        # Label first, it is easier to recognize than the number
+        label = bank_balance.get_account_label(account)
+        name = f"{label} ({account})" if label else account
         for first, last in periods:
-            click.secho(f"Account: {account} missing data between {first:%Y-%m-%d} and {last:%Y-%m-%d}", fg="red")
+            click.secho(f"Account: {name} missing data between {first:%Y-%m-%d} and {last:%Y-%m-%d}", fg="red")
 
     csv_path = BankBalanceToCSV().write_csv(bank_balance, date_from=date_from, date_to=date_to)
     click.echo(f"Output written to {csv_path}.")

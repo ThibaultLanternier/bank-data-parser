@@ -37,7 +37,7 @@ A day without transactions between two days with transactions SHALL have its sta
 - **THEN** these 8 days have unknown start and end balances
 
 ### Requirement: Missing data periods
-The balance history SHALL report, for each account, the periods of consecutive days of its daily series whose end balance is unknown, each as a first and a last day, both included, in date order; an account without such a day SHALL not be reported. The `balance` command SHALL print each period as `Account: <account number> missing data between <first day> and <last day>`, for the range given by `--from` and `--to`.
+The balance history SHALL report, for each account, the periods of consecutive days of its daily series whose end balance is unknown, each as a first and a last day, both included, in date order; an account without such a day SHALL not be reported. The `balance` command SHALL print each period as `Account: <account label> (<account number>) missing data between <first day> and <last day>`, or with the account number alone when the account has no label, for the range given by `--from` and `--to`.
 
 #### Scenario: Gap between two days
 - **WHEN** account A has a gap reported on 2023-01-02, the previous day with transactions being 2022-12-30
@@ -58,6 +58,10 @@ The balance history SHALL report, for each account, the periods of consecutive d
 #### Scenario: Unknown balance on days with transactions
 - **WHEN** the first day of account A with transactions has an unknown balance, and so has the next day without transactions
 - **THEN** both days are in the same missing data period
+
+#### Scenario: Printed with the account label
+- **WHEN** account 00040079727, labelled `Compte courant`, is missing data between 2022-12-31 and 2023-01-01
+- **THEN** the `balance` command prints `Account: Compte courant (00040079727) missing data between 2022-12-31 and 2023-01-01`
 
 #### Scenario: Gap between consecutive days
 - **WHEN** a gap is reported on Tuesday and Monday has transactions
