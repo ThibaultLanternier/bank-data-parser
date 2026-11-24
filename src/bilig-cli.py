@@ -116,6 +116,12 @@ def extract(input_path: str, file_type: str, groups_path: str, parquet: bool):
         click.echo(f"Parquet written to {parquet_path}.")
 
 
+def _account_name(bank_balance: BankBalance, account: str) -> str:
+    """Label first, it is easier to recognize than the number; the number alone without label."""
+    label = bank_balance.get_account_label(account)
+    return f"{label} ({account})" if label else account
+
+
 def _format_amount(amount: float) -> str:
     """French format, like the CSV input: spaces as thousands separator, comma as decimal."""
     return f"{amount:,.2f} €".replace(",", " ").replace(".", ",")
@@ -167,7 +173,8 @@ def balance(input_path: str, date_from: datetime | None, date_to: datetime | Non
         inferred = sum(d.is_inferred for d in days)
         unknown = sum(d.end_balance is None for d in days)
         click.echo(
-            f"{account}: {len(days)} days from {days[0].start_date:%Y-%m-%d} to {days[-1].start_date:%Y-%m-%d}, "
+            f"{_account_name(bank_balance, account)}: {len(days)} days "
+            f"from {days[0].start_date:%Y-%m-%d} to {days[-1].start_date:%Y-%m-%d}, "
             f"{inferred} inferred, {unknown} without balance"
         )
     for c in bank_balance.conflicts:
@@ -181,9 +188,7 @@ def balance(input_path: str, date_from: datetime | None, date_to: datetime | Non
     click.echo(f"{len(bank_balance.gaps)} gaps, {len(bank_balance.conflicts)} conflicts.")
     # Periods to export again so that the daily series is complete for every account
     for account, periods in bank_balance.get_missing_periods(date_from, date_to).items():
-        # Label first, it is easier to recognize than the number
-        label = bank_balance.get_account_label(account)
-        name = f"{label} ({account})" if label else account
+        name = _account_name(bank_balance, account)
         for first, last in periods:
             click.secho(f"Account: {name} missing data between {first:%Y-%m-%d} and {last:%Y-%m-%d}", fg="red")
 

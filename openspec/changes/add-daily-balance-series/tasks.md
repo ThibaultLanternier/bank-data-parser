@@ -33,6 +33,8 @@
 
 - [x] 6.2 Print the account label before the account number in the missing data lines of the `balance` command (`Account: <label> (<account>) missing data between ...`, number alone without label); verify with the CLI tests and `poetry run pytest`
 
+- [x] 6.3 Print the account label before the account number in the per account summary of the `balance` command, sharing the formatting with the missing data lines; verify with the CLI tests and `poetry run pytest`
+
 ## Workflow follow-up
 
 - Open the PR against `develop`, with the lint fixes in the last commit.
