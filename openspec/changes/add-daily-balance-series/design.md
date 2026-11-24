@@ -32,6 +32,9 @@ Alternative considered: carrying the previous end balance after the last day, re
 ### CSV writer and CLI
 `BankBalanceToCSV.write_csv(bank_balance, filename=None, date_from=None, date_to=None)` writes `get_daily_series(date_from, date_to)`; `gap` and `conflict` lookups are unchanged and naturally empty on filled days. The `balance` command adds `--from` / `--to` as `click.DateTime(formats=["%Y-%m-%d"])`, raises `click.BadParameter` when `--from` is after `--to`, keeps the summary on `get_days()` and passes the bounds to the writer.
 
+### `get_missing_periods(date_from=None, date_to=None) -> dict[str, list[tuple[datetime, datetime]]]`
+Built from `get_daily_series` with the same bounds: the runs of consecutive days whose `end_balance` is `None`, as `(first, last)` days at 00:00, only for accounts with at least one run. A list per account because an account can miss several periods. Named `get_missing_periods` rather than `get_gaps` to keep it apart from the existing `gaps` attribute (`BalanceGap`, the amount a day starts off by), which is a different notion. A gap between two consecutive days leaves no empty day and is therefore not a missing period; it is still printed as a gap. The `balance` command prints the periods after the gaps.
+
 ## Risks / Trade-offs
 
 - [Breaking CSV: many more rows, some with empty balances] → `transaction_count` 0 identifies filled rows; documented in `AGENTS.md`.

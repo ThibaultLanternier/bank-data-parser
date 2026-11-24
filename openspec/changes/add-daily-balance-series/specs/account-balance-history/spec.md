@@ -36,6 +36,33 @@ A day without transactions between two days with transactions SHALL have its sta
 - **WHEN** the range starts 3 days before the first day of account A and ends 5 days after its last day
 - **THEN** these 8 days have unknown start and end balances
 
+### Requirement: Missing data periods
+The balance history SHALL report, for each account, the periods of consecutive days of its daily series whose end balance is unknown, each as a first and a last day, both included, in date order; an account without such a day SHALL not be reported. The `balance` command SHALL print each period as `Account: <account number> missing data between <first day> and <last day>`, for the range given by `--from` and `--to`.
+
+#### Scenario: Gap between two days
+- **WHEN** account A has a gap reported on 2023-01-02, the previous day with transactions being 2022-12-30
+- **THEN** account A is missing data between 2022-12-31 and 2023-01-01
+
+#### Scenario: Range beyond the history
+- **WHEN** the range is 2026-01-01 to 2026-12-31 and the days of account A with transactions go from 2026-01-01 to 2026-11-30 without gap
+- **THEN** account A is missing data between 2026-12-01 and 2026-12-31
+
+#### Scenario: Several periods
+- **WHEN** account A has two gaps
+- **THEN** both periods are reported for account A, the earliest first
+
+#### Scenario: Complete history
+- **WHEN** every day of account B's series has a known end balance
+- **THEN** account B is not reported
+
+#### Scenario: Unknown balance on days with transactions
+- **WHEN** the first day of account A with transactions has an unknown balance, and so has the next day without transactions
+- **THEN** both days are in the same missing data period
+
+#### Scenario: Gap between consecutive days
+- **WHEN** a gap is reported on Tuesday and Monday has transactions
+- **THEN** no missing data period is reported for it, the gap itself being printed
+
 ## MODIFIED Requirements
 
 ### Requirement: Balance command
