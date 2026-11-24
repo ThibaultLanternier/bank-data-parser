@@ -18,8 +18,8 @@
 
 ## 4. Integration check
 
-- [ ] 4.1 Run `poetry run python src/bilig-cli.py balance data/boursobank` and verify the CSV has one row per calendar day per account, carried balances across weekends, and empty balances on 2022-12-31 and 2023-01-01 of account …9727
-- [ ] 4.2 Run `poetry run pytest` and `make lint` and verify both pass
+- [x] 4.1 Run `poetry run python src/bilig-cli.py balance data/boursobank` and verify the CSV has one row per calendar day per account, carried balances across weekends, and empty balances on 2022-12-31 and 2023-01-01 of account …9727
+- [x] 4.2 Run `poetry run pytest` and `make lint` and verify both pass
 
 ## Workflow follow-up
 
