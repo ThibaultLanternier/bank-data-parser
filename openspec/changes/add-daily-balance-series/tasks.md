@@ -5,7 +5,7 @@
 - [x] 1.1 Keep `account_number -> account_label` in `BankBalance` from the kept days and expose `get_account_label(account)`; verify with a test in `src/tests/test_bank_balance.py` on two accounts
 - [x] 1.2 Add `BankBalance.get_daily_series(date_from=None, date_to=None)` returning one `DayTransactions` per account and calendar day (bounds included, `None` bound = the account's first or last day with transactions), real days being the kept records and other days empty records; verify with tests for a weekend filled in, a given range inside the history, and two accounts with their own default ranges
 - [x] 1.3 Set the balances of empty days: previous end balance as start and end when previous and next real days exist and no gap is reported on the next one, `None` otherwise (gap, unknown previous end, before the first day, after the last day); verify with tests for no gap, the 3.99 gap, an inferred next day, and a range extending before and after the history
-- [ ] 1.4 Describe the daily series in the "Balance history" section of `AGENTS.md` (filling rule, `None` inside gaps and outside the history); verify the section matches the specs
+- [x] 1.4 Describe the daily series in the "Balance history" section of `AGENTS.md` (filling rule, `None` inside gaps and outside the history); verify the section matches the specs
 
 ## 2. CSV export
 

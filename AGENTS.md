@@ -56,6 +56,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - `BankBalance` keeps one day record per account and day: the one with the most transactions wins; a tie with different amounts keeps the first one read and is reported in `conflicts`
 - End of day balance: the balance of a kept transaction whose value date is that day (a late-booked transaction gives the balance of an earlier day); otherwise previous end + the day's transactions, flagged `is_inferred`; unknown when there is no previous end. Start balance = end - the day's transactions. Compared to the cent
 - `gaps`: a `BalanceGap` (account, previous day, day, missing amount) when a non-inferred day starts at a different balance than the previous day ended, meaning transactions are missing. Days without transactions are not gaps
+- `get_daily_series(from, to)`: one `DayTransactions` per account and calendar day, bounds included (default: the account's first and last day with transactions). Days with transactions are the kept records; a day without transactions is an empty record whose start and end balances are the previous end balance when the next day with transactions has no gap, `None` inside a gap, after an unknown balance, before the first day or after the last day
 
 ## Groups
 
