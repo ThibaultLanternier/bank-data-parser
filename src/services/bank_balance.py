@@ -81,6 +81,28 @@ class BankBalance:
                 day += timedelta(days=1)
         return series
 
+    def get_missing_periods(
+        self, date_from: datetime | None = None, date_to: datetime | None = None
+    ) -> dict[str, list[tuple[datetime, datetime]]]:
+        """Per account, the (first, last) days of each run of daily series days with an unknown end balance.
+
+        Accounts without missing data are left out. A gap between two consecutive days leaves no day
+        without balance and is not a missing period.
+        """
+        periods: dict[str, list[tuple[datetime, datetime]]] = {}
+        for account, days in self.get_daily_series(date_from, date_to).items():
+            runs: list[tuple[datetime, datetime]] = []
+            for day in days:
+                if day.end_balance is not None:
+                    continue
+                if runs and runs[-1][1] + timedelta(days=1) == day.start_date:
+                    runs[-1] = (runs[-1][0], day.start_date)
+                else:
+                    runs.append((day.start_date, day.start_date))
+            if runs:
+                periods[account] = runs
+        return periods
+
     def _deduplicate(self, day_transactions: list[DayTransactions]) -> dict[tuple[str, datetime], DayTransactions]:
         kept: dict[tuple[str, datetime], DayTransactions] = {}
         for day in day_transactions:

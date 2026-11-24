@@ -350,3 +350,73 @@ class TestDailySeriesBalances:
         outside = days[:3] + days[-5:]
         assert len(days) == 12
         assert all(d.transactions == [] and (d.start_balance, d.end_balance) == (None, None) for d in outside)
+
+
+def _missing(transactions: list[Transaction], date_from: str | None = None, date_to: str | None = None):
+    bounds = [datetime.strptime(d, "%Y-%m-%d") if d else None for d in (date_from, date_to)]
+    return BankBalance(_days(transactions)).get_missing_periods(*bounds)
+
+
+class TestMissingPeriods:
+    def test_gap_between_two_days(self):
+        transactions = [
+            _transaction(-77.97, date="2022-12-30", balance=10105.11),
+            _transaction(2950.0, date="2023-01-02", balance=12190.6),
+            _transaction(-868.5, date="2023-01-02", balance=12190.6),
+        ]
+
+        assert _missing(transactions) == {"00001": [(datetime(2022, 12, 31), datetime(2023, 1, 1))]}
+
+    def test_range_beyond_the_history(self):
+        transactions = [
+            _transaction(-10.0, date="2026-01-01", balance=1000.0),
+            _transaction(-25.0, date="2026-11-30", balance=975.0),
+        ]
+
+        periods = _missing(transactions, "2026-01-01", "2026-12-31")
+
+        assert periods == {"00001": [(datetime(2026, 12, 1), datetime(2026, 12, 31))]}
+
+    def test_several_periods_earliest_first(self):
+        transactions = [
+            _transaction(-10.0, date="2026-03-02", balance=1000.0),
+            _transaction(-10.0, date="2026-03-05", balance=995.0),
+            _transaction(-10.0, date="2026-03-09", balance=980.0),
+        ]
+
+        assert _missing(transactions) == {
+            "00001": [
+                (datetime(2026, 3, 3), datetime(2026, 3, 4)),
+                (datetime(2026, 3, 6), datetime(2026, 3, 8)),
+            ]
+        }
+
+    def test_complete_history_is_not_reported(self):
+        savings = Account("00002", "Savings Account")
+        transactions = [
+            _transaction(-10.0, date="2026-09-04", balance=1000.0),
+            _transaction(-25.0, date="2026-09-07", balance=975.0),
+            _on_account(_transaction(10.0, date="2026-09-04", balance=500.0), savings),
+            _on_account(_transaction(10.0, date="2026-09-06", balance=400.0), savings),
+        ]
+
+        assert list(_missing(transactions)) == ["00002"]
+
+    def test_unknown_first_day_joins_the_next_days(self):
+        transactions = [
+            _transaction(-10.0, date="2025-07-11", value_date="2025-07-10", balance=1000.0),
+            _transaction(-5.0, date="2025-07-14", balance=985.0),
+        ]
+
+        assert _missing(transactions) == {"00001": [(datetime(2025, 7, 11), datetime(2025, 7, 13))]}
+
+    def test_gap_between_consecutive_days_is_not_a_missing_period(self):
+        transactions = [
+            _transaction(-10.0, date="2026-09-07", balance=1000.0),
+            _transaction(-10.0, date="2026-09-08", balance=995.0),
+        ]
+
+        balance = BankBalance(_days(transactions))
+
+        assert len(balance.gaps) == 1
+        assert balance.get_missing_periods() == {}
