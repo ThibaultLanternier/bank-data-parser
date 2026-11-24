@@ -193,6 +193,30 @@ class TestBalanceCommand:
         # Header + one row per calendar day from 2022-12-30 to 2023-01-02
         assert len(output_file.read_text(encoding="utf-8-sig").splitlines()) == 5
 
+    def test_writes_the_given_range(self, input_dir):
+        (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
+
+        result = CliRunner().invoke(
+            bilig_cli.cli, ["balance", str(input_dir), "--from", "2022-12-31", "--to", "2023-01-05"]
+        )
+
+        assert result.exit_code == 0, result.output
+        # The summary still counts the days with transactions of the whole history
+        assert "00001: 2 days from 2022-12-30 to 2023-01-02" in result.output
+        [output_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.csv"))
+        dates = [line.split(";")[2] for line in output_file.read_text(encoding="utf-8-sig").splitlines()[1:]]
+        assert dates == ["2022-12-31", "2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"]
+
+    def test_fails_when_from_is_after_to(self, input_dir):
+        (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
+
+        result = CliRunner().invoke(
+            bilig_cli.cli, ["balance", str(input_dir), "--from", "2026-04-01", "--to", "2026-03-01"]
+        )
+
+        assert result.exit_code != 0
+        assert "the start date is after the end date" in result.output
+
     def test_fails_without_csv_files(self, input_dir):
         result = CliRunner().invoke(bilig_cli.cli, ["balance", str(input_dir)])
 

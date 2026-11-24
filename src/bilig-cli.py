@@ -1,5 +1,6 @@
 import calendar
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -140,13 +141,28 @@ def report(input_path: str, file_type: str):
 
 @cli.command()
 @click.argument("input_path", default="data/boursobank", type=click.Path(exists=True))
-def balance(input_path: str):
+@click.option(
+    "--from",
+    "date_from",
+    type=click.DateTime(formats=["%Y-%m-%d"]),
+    help="First day of the daily series (default: first day of each account)",
+)
+@click.option(
+    "--to",
+    "date_to",
+    type=click.DateTime(formats=["%Y-%m-%d"]),
+    help="Last day of the daily series (default: last day of each account)",
+)
+def balance(input_path: str, date_from: datetime | None, date_to: datetime | None):
     """Build the day by day balance of each account from the CSV files of INPUT_PATH and write it as CSV."""
+    if date_from and date_to and date_from > date_to:
+        raise click.BadParameter("the start date is after the end date", param_hint="'--from'")
     # Only CSV exports carry a balance per transaction
     transactions = read_transactions(input_path, "csv")
     day_transactions = DayTransactions.from_transactions(transactions)
     bank_balance = BankBalance(day_transactions)
 
+    # The summary counts the days with transactions only, not the filled days of the series
     for account, days in bank_balance.get_days().items():
         inferred = sum(d.is_inferred for d in days)
         unknown = sum(d.end_balance is None for d in days)
@@ -164,7 +180,7 @@ def balance(input_path: str):
         )
     click.echo(f"{len(bank_balance.gaps)} gaps, {len(bank_balance.conflicts)} conflicts.")
 
-    csv_path = BankBalanceToCSV().write_csv(bank_balance)
+    csv_path = BankBalanceToCSV().write_csv(bank_balance, date_from=date_from, date_to=date_to)
     click.echo(f"Output written to {csv_path}.")
 
 

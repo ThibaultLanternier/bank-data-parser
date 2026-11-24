@@ -13,7 +13,7 @@
 
 ## 3. CLI
 
-- [ ] 3.1 Add `--from` / `--to` (`YYYY-MM-DD`) to the `balance` command in `src/bilig-cli.py`, fail with a clear message when `--from` is after `--to`, pass the bounds to the CSV writer and keep the summary on the days with transactions; verify with CLI tests (click `CliRunner`) for a given range and an invalid range, or by running `poetry run python src/bilig-cli.py balance data/boursobank --from 2026-03-01 --to 2026-03-31` and checking the CSV holds March 2026 only
+- [x] 3.1 Add `--from` / `--to` (`YYYY-MM-DD`) to the `balance` command in `src/bilig-cli.py`, fail with a clear message when `--from` is after `--to`, pass the bounds to the CSV writer and keep the summary on the days with transactions; verify with CLI tests (click `CliRunner`) for a given range and an invalid range, or by running `poetry run python src/bilig-cli.py balance data/boursobank --from 2026-03-01 --to 2026-03-31` and checking the CSV holds March 2026 only
 - [ ] 3.2 Update the `balance` run command in `AGENTS.md` with `--from` / `--to` and the one-row-per-calendar-day output; verify it matches the CLI help
 
 ## 4. Integration check
