@@ -26,12 +26,18 @@ def _format(value: float | None) -> str:
 
 
 class BankBalanceToCSV:
-    """Write the kept days of a BankBalance, one row per account and day, to analyze and debug the history."""
+    """Write the daily series of a BankBalance, one row per account and calendar day, to analyze and chart it."""
 
     def __init__(self, output_dir: Path | None = None):
         self.output_dir = output_dir
 
-    def write_csv(self, bank_balance: BankBalance, filename: str | None = None) -> Path:
+    def write_csv(
+        self,
+        bank_balance: BankBalance,
+        filename: str | None = None,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
+    ) -> Path:
         if filename is None:
             filename = f"balance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         output_path = (self.output_dir or file_recorder.OUTPUT_DIR) / filename
@@ -43,12 +49,12 @@ class BankBalanceToCSV:
         with open(output_path, "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=FIELDNAMES, delimiter=";")
             writer.writeheader()
-            for account, days in bank_balance.get_days().items():
+            for account, days in bank_balance.get_daily_series(date_from, date_to).items():
                 for day in days:
                     key = (account, day.start_date)
                     writer.writerow({
                         "account_number": account,
-                        "account_label": day.transactions[0].account.account_label,
+                        "account_label": day.account_label,
                         "date": day.start_date.strftime("%Y-%m-%d"),
                         "start_balance": _format(day.start_balance),
                         "total": _format(day.total),
@@ -57,7 +63,8 @@ class BankBalanceToCSV:
                         "is_inferred": "INFERRED" if day.is_inferred else "",
                         "gap": _format(gaps.get(key)),
                         "conflict": "CONFLICT" if key in conflicts else "",
-                        "source_file": day.transactions[0].source_file,
+                        # Days without transactions come from no file
+                        "source_file": day.transactions[0].source_file if day.transactions else "",
                     })
 
         return output_path
