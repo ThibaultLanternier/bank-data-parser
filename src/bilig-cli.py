@@ -15,6 +15,7 @@ from logging_config import setup_logging
 from services.bank_balance import BankBalance
 from services.bank_balance_to_csv import BankBalanceToCSV
 from services.bank_balance_to_openmetrics import BankBalanceToOpenMetrics
+from services.bank_balance_transactions_to_jsonl import BankBalanceTransactionsToJsonl
 from services.categorize_session import Action, CategorizeSession, ClusterReview, PatternPreview, Progress
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
@@ -163,7 +164,10 @@ def report(input_path: str, file_type: str):
 @click.option(
     "--openmetrics",
     is_flag=True,
-    help="Also write the end of day balances as an OpenMetrics file, to import with promtool",
+    help=(
+        "Also write the end of day balances as an OpenMetrics file and the transactions as JSON lines, "
+        "to import into Prometheus and Loki"
+    ),
 )
 def balance(input_path: str, date_from: datetime | None, date_to: datetime | None, openmetrics: bool):
     """Build the day by day balance of each account from the CSV files of INPUT_PATH and write it as CSV."""
@@ -203,6 +207,8 @@ def balance(input_path: str, date_from: datetime | None, date_to: datetime | Non
     if openmetrics:
         om_path = BankBalanceToOpenMetrics().write_openmetrics(bank_balance, date_from=date_from, date_to=date_to)
         click.echo(f"OpenMetrics output written to {om_path}.")
+        jsonl_path = BankBalanceTransactionsToJsonl().write_jsonl(bank_balance, date_from=date_from, date_to=date_to)
+        click.echo(f"Transactions output written to {jsonl_path}.")
 
 
 class QuestionaryUi:
