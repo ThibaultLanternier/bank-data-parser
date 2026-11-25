@@ -14,6 +14,7 @@ from entities.transaction import Transaction
 from logging_config import setup_logging
 from services.bank_balance import BankBalance
 from services.bank_balance_to_csv import BankBalanceToCSV
+from services.bank_balance_to_openmetrics import BankBalanceToOpenMetrics
 from services.categorize_session import Action, CategorizeSession, ClusterReview, PatternPreview, Progress
 from services.csv_bank_data_reader import CsvBankDataReader
 from services.file_reader import FileReader
@@ -159,7 +160,12 @@ def report(input_path: str, file_type: str):
     type=click.DateTime(formats=["%Y-%m-%d"]),
     help="Last day of the daily series (default: last day of each account)",
 )
-def balance(input_path: str, date_from: datetime | None, date_to: datetime | None):
+@click.option(
+    "--openmetrics",
+    is_flag=True,
+    help="Also write the end of day balances as an OpenMetrics file, to import with promtool",
+)
+def balance(input_path: str, date_from: datetime | None, date_to: datetime | None, openmetrics: bool):
     """Build the day by day balance of each account from the CSV files of INPUT_PATH and write it as CSV."""
     if date_from and date_to and date_from > date_to:
         raise click.BadParameter("the start date is after the end date", param_hint="'--from'")
@@ -194,6 +200,9 @@ def balance(input_path: str, date_from: datetime | None, date_to: datetime | Non
 
     csv_path = BankBalanceToCSV().write_csv(bank_balance, date_from=date_from, date_to=date_to)
     click.echo(f"Output written to {csv_path}.")
+    if openmetrics:
+        om_path = BankBalanceToOpenMetrics().write_openmetrics(bank_balance, date_from=date_from, date_to=date_to)
+        click.echo(f"OpenMetrics output written to {om_path}.")
 
 
 class QuestionaryUi:
