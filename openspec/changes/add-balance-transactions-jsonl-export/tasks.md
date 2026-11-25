@@ -6,9 +6,9 @@
 
 ## 2. JSON lines writer
 
-- [ ] 2.1 Add `BankBalanceTransactionsToJsonl` in `src/services/bank_balance_transactions_to_jsonl.py` writing one line per transaction of the daily series, keys in the spec order, `ensure_ascii=False`, ordered by account then `date_value` (stable); verify with `src/tests/test_bank_balance_transactions_to_jsonl.py` covering the exact line of a card payment, `null` balance, non ASCII label, ordering across accounts and days, no line for filled days, and only the kept day record of overlapping files
-- [ ] 2.2 Compute the export `id` (account, operation date, value date, amount with 2 decimals, bank label, occurrence index); verify with tests: identical payments of a day get different ids, the same transaction from two files or with another suggested label or other spacing gets the same id and the same line
-- [ ] 2.3 Honour `date_from` / `date_to` and the default `balance_<timestamp>.jsonl` name in `file_recorder.OUTPUT_DIR`; verify with tests on a range and on the default path
+- [x] 2.1 Add `BankBalanceTransactionsToJsonl` in `src/services/bank_balance_transactions_to_jsonl.py` writing one line per transaction of the daily series, keys in the spec order, `ensure_ascii=False`, ordered by account then `date_value` (stable); verify with `src/tests/test_bank_balance_transactions_to_jsonl.py` covering the exact line of a card payment, `null` balance, non ASCII label, ordering across accounts and days, no line for filled days, and only the kept day record of overlapping files
+- [x] 2.2 Compute the export `id` (account, operation date, value date, amount with 2 decimals, bank label, occurrence index); verify with tests: identical payments of a day get different ids, the same transaction from two files or with another suggested label or other spacing gets the same id and the same line
+- [x] 2.3 Honour `date_from` / `date_to` and the default `balance_<timestamp>.jsonl` name in `file_recorder.OUTPUT_DIR`; verify with tests on a range and on the default path
 - [ ] 2.4 Add `*.jsonl` to `src/output/.gitignore` and `BankBalanceTransactionsToJsonl` to the AGENTS.md services list; verify `git check-ignore src/output/x.jsonl` matches and the existing `*.csv`, `*.parquet`, `*.om` patterns still do
 
 ## 3. Balance command
