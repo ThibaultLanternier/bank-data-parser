@@ -2,10 +2,10 @@
 
 ## 1. OpenMetrics writer
 
-- [ ] 1.1 Add `BankBalanceToOpenMetrics` in `src/services/bank_balance_to_openmetrics.py` writing the `HELP` / `TYPE` / `UNIT` header, one series per account labelled `account` and `account_label` (from `get_account_label`), samples ordered by time, and `# EOF`; verify with `src/tests/test_bank_balance_to_openmetrics.py` covering the header, the series order and the exact sample lines, run with `poetry run pytest`
-- [ ] 1.2 Write one sample per day with a known end balance, value with two decimals and a dot, timestamp at 00:00 UTC of the next day in seconds, no sample for unknown balances; verify with tests for a known day (`1523.45 1704153600`), a filled day, the days of a gap left out and a negative balance
-- [ ] 1.3 Escape `\`, `"` and newline in label values and keep `account_label=""` for an account without label; verify with tests on a label holding a quote and a backslash and on an account without label
-- [ ] 1.4 Honour `date_from` / `date_to` and the default `balance_<timestamp>.om` name in `file_recorder.OUTPUT_DIR`; verify with tests on a range and on the default path
+- [x] 1.1 Add `BankBalanceToOpenMetrics` in `src/services/bank_balance_to_openmetrics.py` writing the `HELP` / `TYPE` / `UNIT` header, one series per account labelled `account` and `account_label` (from `get_account_label`), samples ordered by time, and `# EOF`; verify with `src/tests/test_bank_balance_to_openmetrics.py` covering the header, the series order and the exact sample lines, run with `poetry run pytest`
+- [x] 1.2 Write one sample per day with a known end balance, value with two decimals and a dot, timestamp at 00:00 UTC of the next day in seconds, no sample for unknown balances; verify with tests for a known day (`1523.45 1704153600`), a filled day, the days of a gap left out and a negative balance
+- [x] 1.3 Escape `\`, `"` and newline in label values and keep `account_label=""` for an account without label; verify with tests on a label holding a quote and a backslash and on an account without label
+- [x] 1.4 Honour `date_from` / `date_to` and the default `balance_<timestamp>.om` name in `file_recorder.OUTPUT_DIR`; verify with tests on a range and on the default path
 - [ ] 1.5 Add `BankBalanceToOpenMetrics` to the services list in AGENTS.md and verify it reads as written
 
 ## 2. Balance command option
