@@ -104,6 +104,10 @@ class Label:
 
         return clean_label.strip()
 
+    def get_bank_label(self) -> str:
+        """Label written by the bank (after the `|`, the whole label without it), spaces collapsed."""
+        return " ".join(self._get_label_part(1).split())
+
     def get_normalized_label(self) -> str:
         s = self.get_label()
         s = unicodedata.normalize('NFD', s)

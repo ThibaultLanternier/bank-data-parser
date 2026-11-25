@@ -7,7 +7,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 - Extract transactions: `python src/bilig-cli.py extract [data/boursobank] [--file-type ofx|qif|csv] [--groups data/groups.yaml]` (default `ofx`)
 - Monthly report (first and last date, income, expenses, transfers between accounts, transactions count, accounts): `python src/bilig-cli.py report [data/boursobank] [--file-type ofx|qif|csv]` (default `ofx`)
 - Assign groups interactively: `python src/bilig-cli.py categorize [data/boursobank] [--file-type ofx|qif|csv] [--groups data/groups.yaml]` reviews the clusters with ungrouped transactions (largest total amount first), internal transactions (transfers between accounts) are never asked about but are shown tagged `[internal]` in the reviewed clusters, asks a pattern (pre-filled with the cluster label) and a group (autocomplete, new name creates it); each answer is saved immediately, skip / undo / quit (or Ctrl+C) available
-- Balance history: `python src/bilig-cli.py balance [data/boursobank] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--openmetrics]` reads the CSV files only (the only ones with a balance), prints per account (`<label> (<account>)`) the days with transactions, the inferred days, the conflicts and the gaps (whole history), the periods missing data per account between `--from` and `--to` (`Account: <label> (<account>) missing data between <first> and <last>`, the number alone when there is no label, days of the series with an unknown balance, to export again), and writes the daily series to `src/output/balance_<timestamp>.csv` (`BankBalanceToCSV`): one row per account and calendar day from `--from` to `--to` (default: each account's first and last day with transactions), days without transactions having a `transaction_count` of 0 and empty balances when unknown; with `--openmetrics`, also writes the end of day balances of the same range to `src/output/balance_<timestamp>.om` (`BankBalanceToOpenMetrics`, see Balance history)
+- Balance history: `python src/bilig-cli.py balance [data/boursobank] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--openmetrics]` reads the CSV files only (the only ones with a balance), prints per account (`<label> (<account>)`) the days with transactions, the inferred days, the conflicts and the gaps (whole history), the periods missing data per account between `--from` and `--to` (`Account: <label> (<account>) missing data between <first> and <last>`, the number alone when there is no label, days of the series with an unknown balance, to export again), and writes the daily series to `src/output/balance_<timestamp>.csv` (`BankBalanceToCSV`): one row per account and calendar day from `--from` to `--to` (default: each account's first and last day with transactions), days without transactions having a `transaction_count` of 0 and empty balances when unknown; with `--openmetrics`, also writes the end of day balances of the same range to `src/output/balance_<timestamp>.om` (`BankBalanceToOpenMetrics`) and their transactions to `src/output/balance_<timestamp>.jsonl` (`BankBalanceTransactionsToJsonl`), see Balance history
 - Run tests: `pytest`
 - Lint: `make lint` (ruff, configured in `pyproject.toml`, fixes what it can)
 - Install dependencies: `poetry install`
@@ -16,7 +16,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 
 - `src/bilig-cli.py` — CLI entry point (uses click)
 - `src/entities/` — data classes: `transaction`, `Account`, `Category`, `DayTransactions`, `Group`, `Label`, `SourceType`
-- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`, `GroupsFile`, `GroupMatcher`, `CategorizeSession`, `BankBalance`, `BankBalanceToCSV`, `BankBalanceToOpenMetrics`
+- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`, `GroupsFile`, `GroupMatcher`, `CategorizeSession`, `BankBalance`, `BankBalanceToCSV`, `BankBalanceToOpenMetrics`, `BankBalanceTransactionsToJsonl`
 - `src/output/` — generated CSV files (gitignored)
 
 ## CSV format
@@ -66,6 +66,41 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 
   - Run Prometheus with a retention longer than the history (e.g. `--storage.tsdb.retention.time=20y`), the default 15 days deletes the imported blocks
   - Grafana stacked curve: query `last_over_time(bank_account_balance_euros[1d])` (one sample per day is older than the 5 minutes lookback), legend `{{account_label}} ({{account}})`, time series panel with stack series `Normal`
+- JSON lines export (Loki through Alloy): one line per transaction of the kept day records of the series (days without transactions give none), ordered by account then value date. Keys in order: `id`, `timestamp` (value date 00:00 UTC, RFC 3339), `date_value`, `date_operation`, `account`, `account_label`, `amount`, `label` (bank label), `normalized_label`, `category`, `parent_category`, `balance`; missing values are `null`
+  - `id`: MD5 of account, operation date, value date, amount (2 decimals), bank label (`Label.get_bank_label()`: the part after `|`, spaces collapsed, the suggested label is left out) and the occurrence index among identical rows of the day record. Unrelated to `Transaction.id`, which merges identical payments of a day
+  - Lines hold nothing from the source file nor the export time: the same transaction gives the same bytes, and Loki drops an identical entry (same stream, timestamp and line) on re-import
+  - Alloy pipeline, `filename` must be dropped, otherwise each export is a new stream and duplicates are kept:
+
+    ```alloy
+    local.file_match "bilig" {
+      path_targets = [{"__path__" = "/path/to/src/output/balance_*.jsonl", "job" = "bilig"}]
+    }
+
+    loki.source.file "bilig" {
+      targets    = local.file_match.bilig.targets
+      forward_to = [loki.process.bilig.receiver]
+    }
+
+    loki.process "bilig" {
+      stage.json {
+        expressions = { timestamp = "", account = "" }
+      }
+      stage.timestamp {
+        source = "timestamp"
+        format = "RFC3339"
+      }
+      stage.labels {
+        values = { account = "" }
+      }
+      stage.label_drop {
+        values = ["filename"]
+      }
+      forward_to = [loki.write.default.receiver]
+    }
+    ```
+
+  - Loki: set `limits_config.reject_old_samples: false` (entries older than a week are rejected by default) and a retention longer than the history
+  - Loki refuses entries far behind the newest entry of a stream: a later export filling an old gap is rejected, import into an empty Loki to rebuild the history
 
 ## Groups
 

@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -246,7 +247,36 @@ class TestBalanceCommand:
 
         assert result.exit_code == 0, result.output
         assert not list(services.file_recorder.OUTPUT_DIR.glob("balance_*.om"))
+        assert not list(services.file_recorder.OUTPUT_DIR.glob("balance_*.jsonl"))
         assert "OpenMetrics" not in result.output
+        assert "Transactions output" not in result.output
+
+    def test_writes_transactions_file_with_the_flag(self, input_dir):
+        (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
+
+        result = CliRunner().invoke(bilig_cli.cli, ["balance", str(input_dir), "--openmetrics"])
+
+        assert result.exit_code == 0, result.output
+        [jsonl_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.jsonl"))
+        assert f"Transactions output written to {jsonl_file}." in result.output
+        records = [json.loads(line) for line in jsonl_file.read_text(encoding="utf-8").splitlines()]
+        assert [(r["date_value"], r["amount"], r["label"]) for r in records] == [
+            ("2022-12-30", -77.97, "a"),
+            ("2023-01-02", 2950.0, "b"),
+            ("2023-01-02", -868.5, "c"),
+        ]
+
+    def test_writes_transactions_file_for_the_given_range(self, input_dir):
+        (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
+
+        result = CliRunner().invoke(
+            bilig_cli.cli, ["balance", str(input_dir), "--openmetrics", "--from", "2023-01-01", "--to", "2023-01-05"]
+        )
+
+        assert result.exit_code == 0, result.output
+        [jsonl_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.jsonl"))
+        dates = [json.loads(line)["date_operation"] for line in jsonl_file.read_text(encoding="utf-8").splitlines()]
+        assert dates == ["2023-01-02", "2023-01-02"]
 
     def test_fails_when_from_is_after_to(self, input_dir):
         (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
