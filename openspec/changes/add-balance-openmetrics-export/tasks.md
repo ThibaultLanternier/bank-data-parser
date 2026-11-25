@@ -11,7 +11,7 @@
 ## 2. Balance command option
 
 - [x] 2.1 Add the `--openmetrics` flag to the `balance` command in `src/bilig-cli.py`, writing the OpenMetrics file with the same range as the CSV and printing its path; verify with `src/tests/test_bilig_cli.py` tests: flag given (both files written, both paths printed), flag with `--from` / `--to`, flag not given (no `.om` file)
-- [ ] 2.2 Document the flag in the AGENTS.md balance command, plus the import (`promtool tsdb create-blocks-from openmetrics --max-block-duration=8760h <file> <data dir>`, Prometheus retention longer than the history) and the Grafana stacked panel (`last_over_time(bank_account_balance_euros[1d])`, legend `{{account_label}} ({{account}})`, stack Normal); verify the documented command line matches `poetry run python src/bilig-cli.py balance --help`
+- [x] 2.2 Document the flag in the AGENTS.md balance command, plus the import (`promtool tsdb create-blocks-from openmetrics --max-block-duration=8760h <file> <data dir>`, Prometheus retention longer than the history) and the Grafana stacked panel (`last_over_time(bank_account_balance_euros[1d])`, legend `{{account_label}} ({{account}})`, stack Normal); verify the documented command line matches `poetry run python src/bilig-cli.py balance --help`
 
 ## 3. Integration check
 
