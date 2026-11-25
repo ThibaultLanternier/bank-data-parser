@@ -14,7 +14,7 @@
 ## 3. Balance command
 
 - [x] 3.1 Write the JSON lines file with `--openmetrics` in `src/bilig-cli.py` (same range, path printed) and update the flag help text; verify with `src/tests/test_bilig_cli.py` tests: flag given (three files and paths), flag with `--from` / `--to`, flag not given (no `.jsonl` file)
-- [ ] 3.2 Document in AGENTS.md the JSON lines file (fields, id, timestamp), the Alloy pipeline (`local.file_match`, `loki.source.file`, `loki.process` with `stage.json`, `stage.timestamp` RFC3339, `stage.labels` account, `stage.label_drop` filename), the Loki limits (`reject_old_samples: false`, retention) and the old gap limitation; verify the documented options match `poetry run python src/bilig-cli.py balance --help`
+- [x] 3.2 Document in AGENTS.md the JSON lines file (fields, id, timestamp), the Alloy pipeline (`local.file_match`, `loki.source.file`, `loki.process` with `stage.json`, `stage.timestamp` RFC3339, `stage.labels` account, `stage.label_drop` filename), the Loki limits (`reject_old_samples: false`, retention) and the old gap limitation; verify the documented options match `poetry run python src/bilig-cli.py balance --help`
 
 ## 4. Integration check
 
