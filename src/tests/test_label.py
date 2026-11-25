@@ -187,3 +187,16 @@ class TestSimilarity:
         label1 = Label("Carte 17/07/25 Au Pain St Malo Cb*6863 | CARTE 17/07/25 AU PAIN ST MALO CB*6863")
         label2 = Label("Carte 26/08/25 St Malo Debloque2 Cb*3657 | CARTE 26/08/25 ST MALO DEBLOQUE2 CB*3657")
         assert label1.get_similarity(label2) < 0.6
+
+
+class TestGetBankLabel:
+    def test_part_after_the_pipe(self):
+        label = Label("Boulangerie Paul | CARTE 01/01/24 BOULANGERIE PAUL CB*1234")
+        assert label.get_bank_label() == "carte 01/01/24 boulangerie paul cb*1234"
+
+    def test_whole_label_without_pipe(self):
+        assert Label("VIR SEPA LOYER").get_bank_label() == "vir sepa loyer"
+
+    def test_spaces_trimmed_and_collapsed(self):
+        label = Label("Ikea | AVOIR 22/06/22 IKEA            2 CB*1643  ")
+        assert label.get_bank_label() == "avoir 22/06/22 ikea 2 cb*1643"

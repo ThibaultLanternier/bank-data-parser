@@ -2,7 +2,7 @@
 
 ## 1. Bank label
 
-- [ ] 1.1 Add `Label.get_bank_label()` returning the part after `|` (the whole label without `|`) with spaces trimmed and collapsed; verify with tests in `src/tests/test_label.py` for a `suggested | bank` label, a label without `|` and a label with repeated spaces, run with `poetry run pytest`
+- [x] 1.1 Add `Label.get_bank_label()` returning the part after `|` (the whole label without `|`) with spaces trimmed and collapsed; verify with tests in `src/tests/test_label.py` for a `suggested | bank` label, a label without `|` and a label with repeated spaces, run with `poetry run pytest`
 
 ## 2. JSON lines writer
 
