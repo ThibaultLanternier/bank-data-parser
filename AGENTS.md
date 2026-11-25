@@ -16,7 +16,7 @@ CLI tool for extracting and processing bank transaction data from Boursobank CSV
 
 - `src/bilig-cli.py` — CLI entry point (uses click)
 - `src/entities/` — data classes: `transaction`, `Account`, `Category`, `DayTransactions`, `Group`, `Label`, `SourceType`
-- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`, `GroupsFile`, `GroupMatcher`, `CategorizeSession`, `BankBalance`, `BankBalanceToCSV`, `BankBalanceToOpenMetrics`
+- `src/services/` — business logic: `CsvBankDataReader`, `OfxBankDataReader`, `QifBankDataReader`, `FileReader`, `FileRecorder`, `TransactionGrouper`, `GroupsFile`, `GroupMatcher`, `CategorizeSession`, `BankBalance`, `BankBalanceToCSV`, `BankBalanceToOpenMetrics`, `BankBalanceTransactionsToJsonl`
 - `src/output/` — generated CSV files (gitignored)
 
 ## CSV format
