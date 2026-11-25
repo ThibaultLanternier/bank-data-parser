@@ -18,8 +18,8 @@
 
 ## 4. Integration check
 
-- [ ] 4.1 Run `poetry run python src/bilig-cli.py balance data/boursobank --openmetrics` on the real data; verify every line parses as JSON, ids are unique, timestamps increase per account, and running it twice gives byte-identical `.jsonl` files
-- [ ] 4.2 Run `make lint` and `poetry run pytest`; verify both are clean
+- [x] 4.1 Run `poetry run python src/bilig-cli.py balance data/boursobank --openmetrics` on the real data; verify every line parses as JSON, ids are unique, timestamps increase per account, and running it twice gives byte-identical `.jsonl` files
+- [x] 4.2 Run `make lint` and `poetry run pytest`; verify both are clean
 
 ## Workflow follow-up
 

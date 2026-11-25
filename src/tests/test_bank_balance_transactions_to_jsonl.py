@@ -123,10 +123,10 @@ class TestExportId:
         assert from_a.read_bytes() == from_b.read_bytes()
 
     def test_suggested_label_and_spacing_do_not_change_the_id(self, tmp_path):
-        before = _records(_bank_balance([_transaction(-2.5, "2024-01-02", label="Boul | CARTE  BOULANGERIE")]), tmp_path)
-        after = _records(_bank_balance([_transaction(-2.5, "2024-01-02", label="Paul | CARTE BOULANGERIE ")]), tmp_path)
+        before = _bank_balance([_transaction(-2.5, "2024-01-02", label="Boul | CARTE  BOULANGERIE")])
+        after = _bank_balance([_transaction(-2.5, "2024-01-02", label="Paul | CARTE BOULANGERIE ")])
 
-        assert before[0]["id"] == after[0]["id"]
+        assert _records(before, tmp_path)[0]["id"] == _records(after, tmp_path)[0]["id"]
 
 
 class TestOutput:

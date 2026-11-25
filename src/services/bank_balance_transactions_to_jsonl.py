@@ -56,7 +56,9 @@ class BankBalanceTransactionsToJsonl:
         lines = []
         for account, days in sorted(bank_balance.get_daily_series(date_from, date_to).items()):
             account_label = bank_balance.get_account_label(account) or None
-            records = [(t, export_id) for day in days for t, export_id in zip(day.transactions, _export_ids(day.transactions))]
+            records = [
+                (t, export_id) for day in days for t, export_id in zip(day.transactions, _export_ids(day.transactions))
+            ]
             # Stable sort: each Loki stream is written in time order, ties in read order
             for t, export_id in sorted(records, key=lambda r: r[0].dateValue):
                 record = {
