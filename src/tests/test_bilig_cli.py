@@ -210,6 +210,44 @@ class TestBalanceCommand:
         assert "Account: Main (00001) missing data between 2022-12-31 and 2023-01-01" in result.output
         assert "Account: Main (00001) missing data between 2023-01-03 and 2023-01-05" in result.output
 
+    def test_writes_openmetrics_file_with_the_flag(self, input_dir):
+        (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
+
+        result = CliRunner().invoke(bilig_cli.cli, ["balance", str(input_dir), "--openmetrics"])
+
+        assert result.exit_code == 0, result.output
+        [csv_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.csv"))
+        [om_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.om"))
+        assert f"Output written to {csv_file}." in result.output
+        assert f"OpenMetrics output written to {om_file}." in result.output
+        samples = [line for line in om_file.read_text(encoding="utf-8").splitlines() if not line.startswith("#")]
+        # 2022-12-31 and 2023-01-01 are in a gap and have no sample
+        assert samples == [
+            'bank_account_balance_euros{account="00001",account_label="Main"} 10105.11 1672444800',
+            'bank_account_balance_euros{account="00001",account_label="Main"} 12190.60 1672704000',
+        ]
+
+    def test_writes_openmetrics_file_for_the_given_range(self, input_dir):
+        (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
+
+        result = CliRunner().invoke(
+            bilig_cli.cli, ["balance", str(input_dir), "--openmetrics", "--from", "2023-01-01", "--to", "2023-01-05"]
+        )
+
+        assert result.exit_code == 0, result.output
+        [om_file] = list(services.file_recorder.OUTPUT_DIR.glob("balance_*.om"))
+        samples = [line for line in om_file.read_text(encoding="utf-8").splitlines() if not line.startswith("#")]
+        assert [line.split(" ")[-1] for line in samples] == ["1672704000"]
+
+    def test_writes_no_openmetrics_file_without_the_flag(self, input_dir):
+        (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
+
+        result = CliRunner().invoke(bilig_cli.cli, ["balance", str(input_dir)])
+
+        assert result.exit_code == 0, result.output
+        assert not list(services.file_recorder.OUTPUT_DIR.glob("balance_*.om"))
+        assert "OpenMetrics" not in result.output
+
     def test_fails_when_from_is_after_to(self, input_dir):
         (input_dir / "export.csv").write_text(BALANCE_CSV, encoding="utf-8-sig")
 
