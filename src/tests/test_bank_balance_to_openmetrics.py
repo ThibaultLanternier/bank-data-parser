@@ -111,7 +111,8 @@ class TestBankBalanceToOpenMetrics:
         assert len(labels) == 1
 
     def test_escapes_label_values(self, tmp_path):
-        bank_balance = _bank_balance([_transaction(-10.0, "2024-01-01", balance=1.0, account=Account("1", 'A "B" \\C'))])
+        account = Account("1", 'A "B" \\C')
+        bank_balance = _bank_balance([_transaction(-10.0, "2024-01-01", balance=1.0, account=account)])
 
         assert _lines(bank_balance, tmp_path)[3] == (
             'bank_account_balance_euros{account="1",account_label="A \\"B\\" \\\\C"} 1.00 1704153600'
@@ -120,7 +121,9 @@ class TestBankBalanceToOpenMetrics:
     def test_account_without_label(self, tmp_path):
         bank_balance = _bank_balance([_transaction(-10.0, "2024-01-01", balance=1.0, account=Account("1", ""))])
 
-        assert _lines(bank_balance, tmp_path)[3] == 'bank_account_balance_euros{account="1",account_label=""} 1.00 1704153600'
+        assert _lines(bank_balance, tmp_path)[3] == (
+            'bank_account_balance_euros{account="1",account_label=""} 1.00 1704153600'
+        )
 
     def test_writes_the_given_range(self, tmp_path, bank_balance):
         lines = _lines(bank_balance, tmp_path, date_from=datetime(2023, 1, 1), date_to=datetime(2023, 1, 2))

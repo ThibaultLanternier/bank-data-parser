@@ -15,8 +15,8 @@
 
 ## 3. Integration check
 
-- [ ] 3.1 Run `poetry run python src/bilig-cli.py balance data/boursobank --openmetrics` on the real data and, if `promtool` is available, `promtool tsdb create-blocks-from openmetrics --max-block-duration=8760h <file> <tmp dir>`; verify the import succeeds without errors, otherwise check the file ends with `# EOF` and timestamps increase per series
-- [ ] 3.2 Run `make lint` and `poetry run pytest`; verify both are clean
+- [x] 3.1 Run `poetry run python src/bilig-cli.py balance data/boursobank --openmetrics` on the real data and, if `promtool` is available, `promtool tsdb create-blocks-from openmetrics --max-block-duration=8760h <file> <tmp dir>`; verify the import succeeds without errors, otherwise check the file ends with `# EOF` and timestamps increase per series
+- [x] 3.2 Run `make lint` and `poetry run pytest`; verify both are clean
 
 ## Workflow follow-up
 
